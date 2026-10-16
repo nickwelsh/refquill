@@ -1,0 +1,29 @@
+{
+  "name": "refquill-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.24.0",
+  "scripts": {
+    "docs:rustdoc": "node scripts/generate-rustdoc.mjs",
+    "docs:dev": "pnpm build && pnpm --filter @refquill/docs dev",
+    "docs:build": "pnpm build && pnpm --filter @refquill/docs build",
+    "docs:generate": "pnpm build && pnpm --filter @refquill/docs api:generate",
+    "docs:check": "pnpm --filter @refquill/docs api:validate && pnpm --filter @refquill/docs types:check && pnpm --filter @refquill/docs test",
+    "examples:check": "pnpm --filter refquill-rust-example generate && pnpm --filter refquill-rust-example check && pnpm --filter refquill-frameworks-example generate && pnpm --filter refquill-frameworks-example check",
+    "refquill": "node packages/cli/bin/refquill.mjs",
+    "build": "cargo build --locked && node scripts/stage-native.mjs && pnpm --filter @nickwelsh/refquill-fumadocs build",
+    "schema": "cargo run --locked -- schema --output packages/schema && node scripts/schema-types.mjs",
+    "test": "cargo test --locked && cargo build --locked && node --test tests/*.test.mjs && pnpm --filter @nickwelsh/refquill-fumadocs test",
+    "check": "cargo fmt --check && cargo clippy --locked --all-targets -- -D warnings && pnpm --filter @nickwelsh/refquill-fumadocs check",
+    "schema:check": "node scripts/check-schema.mjs",
+    "release:pack": "node scripts/package-release.mjs",
+    "release:test": "node scripts/test-release.mjs",
+    "docs:smoke": "pnpm --filter @refquill/docs smoke",
+    "docs:deploy:check": "pnpm --filter @refquill/docs deploy:check"
+  },
+  "devDependencies": {
+    "json-schema-to-typescript": "^16.0.0",
+    "typescript": "~6.0.3",
+    "tsx": "^4.20.6"
+  }
+}

@@ -1,0 +1,92 @@
+/* Material density is independent of foreground, elevation, and corner geometry. */
+@theme {
+    --material-opacity-ultra-thin: 35%;
+    --material-opacity-thin: 50%;
+    --material-opacity-regular: 65%;
+    --material-opacity-thick: 75%;
+    --material-opacity-ultra-thick: 85%;
+    --material-blur-ultra-thin: 8px;
+    --material-blur-thin: 12px;
+    --material-blur-regular: 16px;
+    --material-blur-thick: 24px;
+    --material-blur-ultra-thick: 32px;
+    --material-saturation-ultra-thin: 1.1;
+    --material-saturation-thin: 1.2;
+    --material-saturation-regular: 1.3;
+    --material-saturation-thick: 1.4;
+    --material-saturation-ultra-thick: 1.5;
+    --material-control-border-opacity-ultra-thin: 28%;
+    --material-control-border-opacity-thin: 24%;
+    --material-control-border-opacity-regular: 20%;
+    --material-control-border-opacity-thick: 18%;
+    --material-control-border-opacity-ultra-thick: 16%;
+}
+
+@theme inline {
+    --shadow-floating: var(--floating-shadow);
+    --color-overlay-ring: var(--overlay-ring);
+    --color-control-border: var(--control-border, var(--border));
+}
+
+/* Surface decoration is independent of material density and tint. */
+@utility surface-edge {
+    @apply inset-shadow-[0_0_0_0.0625rem_var(--overlay-edge)];
+}
+
+@utility overlay-surface {
+    @apply shadow-floating ring-1 surface-edge ring-overlay-ring;
+}
+
+@utility material-* {
+    @apply backdrop-blur-(--material-blur) backdrop-saturate-(--material-saturation);
+
+    --material-opacity: --value(--material-opacity-*);
+    --material-blur: --value(--material-blur-*);
+    --material-saturation: --value(--material-saturation-*);
+    --material-control-border-opacity: --value(--material-control-border-opacity-*);
+    --material-tinted-surface: color-mix(
+        in oklab,
+        var(--material-tint, var(--material-surface, var(--color-background))) var(--material-tint-opacity, 12%),
+        var(--material-surface, var(--color-background))
+    );
+    --material-background: color-mix(in srgb, var(--material-tinted-surface) var(--material-opacity), transparent);
+
+    background-color: var(--material-background);
+
+    @variant dark {
+        --control-border: color-mix(
+            in srgb,
+            var(--foreground) var(--material-control-border-opacity),
+            var(--material-tinted-surface)
+        );
+        --input: var(--control-border);
+    }
+}
+
+@utility material-none {
+    --material-background: transparent;
+
+    background-color: transparent;
+    backdrop-filter: none;
+}
+
+:root {
+    --material-surface: var(--background);
+    --overlay-edge: rgb(255 255 255 / 88%);
+    --overlay-ring: color-mix(in oklab, var(--foreground) 10%, transparent);
+    --tooltip-surface: var(--color-zinc-950);
+    --tooltip-fg: var(--color-zinc-50);
+    --avatar-frost-edge: rgb(255 255 255 / 30%);
+    --floating-shadow:
+        0 4px 9px 0 rgb(0 0 0 / 7%), 0 16px 16px 0 rgb(0 0 0 / 6%), 0 36px 22px 0 rgb(0 0 0 / 4%),
+        0 65px 26px 0 rgb(0 0 0 / 1%), 0 101px 28px 0 rgb(0 0 0 / 0%);
+}
+
+.dark {
+    --material-surface: rgb(35 35 35);
+    --overlay-edge: rgb(255 255 255 / 4%);
+    --overlay-ring: color-mix(in oklab, var(--foreground) 15%, transparent);
+    --floating-shadow:
+        rgb(0 0 0 / 12%) 0px 4px 9px 0px, rgb(0 0 0 / 10%) 0px 16px 16px 0px, rgb(0 0 0 / 6%) 0px 36px 22px 0px,
+        rgb(0 0 0 / 2%) 0px 65px 26px 0px, rgb(0 0 0 / 0%) 0px 101px 28px 0px;
+}

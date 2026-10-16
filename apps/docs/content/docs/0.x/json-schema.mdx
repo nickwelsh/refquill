@@ -1,0 +1,74 @@
+---
+title: Render JSON Schema
+description: Build reference pages directly from standard JSON Schema.
+icon: book
+---
+
+Render a standard JSON Schema directly with `createJsonSchemaReference` and
+`JsonSchemaReference`. This path does not run the CLI, validate instances, expand
+references, or convert the schema into Refquill's analyzer document format. It
+projects the supplied schema into the shared rendering contract.
+
+```tsx
+import { loader } from 'fumadocs-core/source';
+import { DocsBody, DocsPage } from 'fumadocs-ui/page';
+import { createJsonSchemaReference } from '@nickwelsh/refquill-fumadocs';
+import { JsonSchemaReference } from '@nickwelsh/refquill-fumadocs/components';
+import schema from './composer.schema.json';
+import '@nickwelsh/refquill-fumadocs/style.css';
+
+const reference = createJsonSchemaReference({
+    schema,
+    baseUrl: '/reference/composer',
+    sourceUrl: 'https://getcomposer.org/schema.json',
+});
+const source = loader({
+    baseUrl: reference.baseUrl,
+    source: reference.toFumadocsSource(),
+});
+// Pass source.pageTree to your layout, and page.data.toc to DocsPage.
+<DocsPage full toc={page.data.toc}>
+    <DocsBody>
+        <JsonSchemaReference reference={reference} />
+    </DocsBody>
+</DocsPage>;
+```
+
+Download [Composer's schema](https://getcomposer.org/schema.json) to
+`composer.schema.json` first, or fetch it in your site's build/server layer and pass
+the decoded JSON. The renderer makes no network requests. `sourceUrl` supplies the
+source link and the retrieval base for relative references; `$id` (or legacy `id`)
+establishes nested resource bases. Local JSON Pointers, `$anchor`, and recursive
+references link to disclosures. External HTTP(S) references remain ordinary links;
+missing or unsafe destinations are shown as unresolved. Dynamic/recursive reference
+keywords link to their static destinations, without evaluating dynamic scope.
+
+Properties, pattern properties, definitions/`$defs`, arrays (including tuples and
+`prefixItems`), additional/unevaluated properties and items, composition,
+conditionals, dependencies, `contains`, and `propertyNames` render as nested
+disclosures. Requiredness is read from the containing object's `required` array.
+Constraints, defaults, enums, examples, and extension keywords retain their JSON
+values. Boolean schemas describe accepting any value or no value. The source panel
+always retains the complete schema, including unknown vocabularies. This is a
+documentation viewer, not a schema metaschema validator or dialect evaluator.
+
+The same safe Markdown, keyboard disclosures, fragment reveal, focus/hover source
+highlighting, container layout, theme variables, and stylesheet apply. On narrow
+containers the source is available in an inline disclosure. The adapter creates one
+Fumadocs page with property and definition TOC anchors and structured search data.
+Use `reference.getPageText()` for Markdown/text exports.
+
+`renderHeader` receives `{ reference, title, description, sourceUrl, badges }` and
+owns the root description when it returns a non-nullish result. `renderBadge` and
+`renderLink` use the API reference contracts. `renderCode(code, 'json',
+{ memberLines })` can replace the source panel; preserve
+`data-reference-declaration` line attributes for highlighting. Override the disclosure
+icon with `icons['chevron-right']`. Functions and schema data stay on the server.
+
+Inputs must contain plain acyclic JSON values with an object or boolean root.
+Rendering rejects more than 64 levels, 100,000 JSON values, or 2,000,000 formatted
+characters. These limits bound documentation work without following `$ref` cycles.
+The checked-in `tests/fixtures/composer.schema.json` is a snapshot retrieved from
+getcomposer.org on October 15, 2026, used by the Fumadocs integration tests.
+
+Browse the [Refquill schema references](./schemas/index.mdx) for a complete site integration. See [customization](./customization.mdx) for shared rendering callbacks.

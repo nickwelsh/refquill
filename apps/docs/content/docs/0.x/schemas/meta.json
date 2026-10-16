@@ -1,0 +1,7 @@
+{
+    "title": "JSON schemas",
+    "description": "Configuration and document contracts",
+    "icon": "data-table",
+    "root": "section",
+    "pages": ["index", "config", "document", "resolved", "reference"]
+}

@@ -1,0 +1,83 @@
+---
+title: Quickstart
+description: Generate and validate a reference for a small PHP or TypeScript project.
+icon: rocket
+---
+
+[Install the CLI](./installation.mdx) first, then run these commands in the project you want to document.
+
+## Document PHP
+
+Create a source file:
+
+```php title="src/Greeting.php"
+<?php
+
+namespace Acme;
+
+/** Create a greeting for a named person. */
+final class Greeting
+{
+    /** Return the greeting text. */
+    public function say(string $name): string
+    {
+        return 'Hello, ' . $name;
+    }
+}
+```
+
+Create the default PHP configuration, generate the document, and validate it:
+
+```sh
+npx refquill init --language php
+npx refquill generate
+npx refquill validate docs/api.generated.json
+```
+
+The default configuration selects `src` and writes `docs/api.generated.json`. Refquill reads the file without executing it.
+
+## Document TypeScript
+
+Install TypeScript in your project if you do not already have it. Create a public entry point:
+
+```ts title="src/index.ts"
+/** Options for a greeting. */
+export interface GreetingOptions {
+    /** The person to greet. */
+    name: string;
+}
+
+/** Return a greeting for the supplied person. */
+export function greet(options: GreetingOptions): string {
+    return `Hello, ${options.name}`;
+}
+```
+
+Use your existing tsconfig or create one:
+
+```json title="tsconfig.json"
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "strict": true,
+        "noEmit": true
+    },
+    "include": ["src"]
+}
+```
+
+In a separate TypeScript project, initialize and generate:
+
+```sh
+npx refquill init --language typescript
+npx refquill generate
+npx refquill validate docs/api.generated.json
+```
+
+`init` never replaces an existing file. To document both languages in one project, edit the existing configuration and add a second input as shown in [configuration](./configuration.mdx).
+
+## Render the result
+
+Import the JSON into a [Fumadocs site](./fumadocs.mdx), or pass it to `resolveDocument` from the [schema package](./schema.mdx). Keep the generated file separate from authored MDX. Regenerate it after changing source declarations or comments.

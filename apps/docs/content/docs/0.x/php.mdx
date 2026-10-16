@@ -1,0 +1,84 @@
+---
+title: PHP analysis
+description: What Refquill extracts from PHP source and PHPDoc.
+icon: code
+---
+
+Refquill uses Mago 1.56.3 to parse PHP syntax, resolve names, and read PHPDoc. It reads UTF-8 `.php` files without a PHP runtime. You do not need to install Composer dependencies to analyze your project's declarations.
+
+## Declarations and comments
+
+The analyzer documents classes, interfaces, traits, enums and cases, functions, constants, methods, constructors, and properties. It includes promoted properties and retains their relationship to constructor parameters. Property hooks retain their signatures.
+
+```php title="src/Repository.php"
+<?php
+
+namespace Acme;
+
+/** Store and retrieve records. */
+interface Repository
+{
+    /**
+     * Find a record by its identifier.
+     *
+     * @param positive-int $id The record identifier.
+     * @return array{id: positive-int, name: string}|null
+     */
+    public function find(int $id): ?array;
+}
+```
+
+Native types and PHPDoc types keep PHP syntax. PHPDoc whitespace and comment-line markers are normalized; native type text is otherwise retained. Parameter, return, and template annotations become structured documentation. The document also retains raw tags, including annotations it cannot turn into symbols.
+
+Private members, `@internal`, and `@ignore` declarations are excluded. Protected members require `includeProtected: true`. Source exclusions apply before analysis.
+
+## Names and relationships
+
+Mago resolves namespaces and imports for native types. PHPDoc references use parsed type nodes. Shape keys, quoted strings, callable parameter names, and in-scope generic parameters stay literal.
+
+`self`, `static`, and `parent` can link to the owning declaration or its documented base. Undocumented external targets retain their names with no internal target ID. A frontend can [resolve external links](./customization.mdx).
+
+The document retains `extends`, `implements`, and trait-use relationships. The Fumadocs renderer lists trait members separately and links them to their declaring trait. It classifies classes with known throwable ancestry as exceptions for presentation. The JSON keeps their kind as `class`.
+
+## Trait member presentation
+
+PHP classes, traits, and enums list documented declarations from their directly and
+transitively used traits in a separate **Trait members** section. Each row links to
+the declaring trait's member and retains its full documentation, signatures, and
+source context. Shared traits are listed once; cyclic uses and undocumented targets
+do not duplicate members or prevent rendering. Hovering a trait member highlights
+the direct `use` statement through which it was discovered.
+
+`reference.getMembers(id)` still returns only declared children.
+`reference.getTraitMembers(id)` returns `{ member, declaringTrait, usedTrait }`
+entries for the separate inventory. Class declarations and trait declarations
+remain distinct, including when names overlap. This is documentation of the trait
+sources, not runtime flattening: aliases, `insteadof`, and visibility adaptations
+remain in the retained `trait-use` documentation tags instead of being invented as
+new class symbols. Member anchors, Markdown, search content, and the page TOC include
+these rows without changing canonical trait URLs or schema-v1 data.
+
+## Exception presentation
+
+`reference.getSymbolKind(id)` refines PHP classes into the `exception` presentation
+category when their resolved ancestry reaches a PHP core/SPL or standard extension
+throwable base. Local subclasses are followed transitively, imported aliases are
+already resolved by the analyzer, and cyclic ancestry is bounded. Names ending in
+`Exception` are not sufficient; unknown external ancestry remains a class.
+Schema-v1 symbols retain `kind: "class"`, along with their members, relationships,
+source declarations, trait inventories, and readable URLs.
+
+Exceptions appear in their own namespace listing, use an exception badge and
+`refquill-exception` page metadata, and default to Lucide `OctagonAlert`. Override
+`icons.exception` with a host SVG component just like other API kinds. Use
+`getSymbolKind` in custom preview cards when they should show the same category.
+
+## Limits
+
+Refquill documents declared members. It does not flatten inherited PHP members, synthesize `@method` or `@property` symbols, merge `@inheritDoc`, or resolve all PHPStan and Psalm type aliases.
+
+Trait aliases, `insteadof`, and visibility adaptations remain in documentation tags. They do not create synthetic class members. Runtime `define()` calls and dynamic declarations are outside the analyzer's scope.
+
+The analyzer excludes anonymous classes, closures, and declarations local to implementations. It can document conditional declarations without knowing which runtime branch will execute. Duplicate public identities fail validation.
+
+PHP syntax errors stop generation. PHPDoc parsing issues produce diagnostics and retain the available raw tags. The previous artifact survives a failed run.

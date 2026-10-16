@@ -1,0 +1,158 @@
+---
+title: TypeScript analysis
+description: Document public TypeScript exports, React components, and framework props.
+icon: code
+---
+
+The CLI bundles TypeScript 6.0.3 and TypeDoc 0.28.20. It reads your tsconfig and uses the compiler for inferred types, imports, overloads, and re-exports. Install your project's dependencies before generation.
+
+## Select public entry points
+
+```json title="refquill.json"
+{
+    "output": "docs/api.generated.json",
+    "inputs": [
+        {
+            "language": "typescript",
+            "name": "client",
+            "tsconfig": "tsconfig.json",
+            "entryPoints": ["src/index.ts", "src/components.tsx"]
+        }
+    ]
+}
+```
+
+Use entry points that represent your package's public exports. A directory expands into source entry points. TypeDoc follows re-exports from the selected modules. It does not execute your modules or load project TypeDoc plugins.
+
+## Supported exports
+
+Refquill documents classes, interfaces, enums, functions, variables, type aliases, namespaces, modules, accessors, and their public members. Declaration files work as entry points too. This site's schema reference comes from the package's `index.d.ts`.
+
+```ts title="src/index.ts"
+/** A page of results and its continuation token. */
+export interface Page<T> {
+    items: T[];
+    next: string | null;
+}
+
+/** Return the first item, or undefined when the page is empty. */
+export function first<T>(page: Page<T>): T | undefined {
+    return page.items[0];
+}
+```
+
+Explicit source annotations retain their syntax. Inferred types use TypeDoc's compiler-backed representation. Descriptions, parameter and return documentation, examples, remarks, tags, and deprecation metadata come from comments.
+
+Private and `@internal` declarations are excluded. Protected members require `includeProtected: true`.
+
+## Frontend components
+
+React and SolidJS components retain their TypeScript kind and gain framework
+metadata. Reference pages label them as components and show a **Props** section
+with individual types, descriptions, required/optional status, defaults, nested
+object shapes, and callback signatures.
+
+### React components and hooks
+
+Select your public `.tsx` entry points or a TypeScript barrel that re-exports
+them, using your project's React tsconfig. No framework flag is required.
+
+```tsx title="src/components.tsx"
+import { memo, type ReactNode } from 'react';
+
+export interface BadgeProps {
+    /** Text displayed inside the badge. */
+    label: string;
+    /** Visual emphasis. */
+    tone?: 'neutral' | 'positive';
+    /** Optional content after the label. */
+    children?: ReactNode;
+    /** Called when the badge is selected. */
+    onSelect?: (label: string) => void;
+}
+
+/** Display a selectable status badge. */
+export function Badge({ label, tone = 'neutral', children, onSelect }: BadgeProps) {
+    return (
+        <button data-tone={tone} onClick={() => onSelect?.(label)}>
+            {label}
+            {children}
+        </button>
+    );
+}
+
+/** Memoized status badge with the same props. */
+export const MemoBadge = memo(Badge);
+```
+
+Both component pages show `label` as required, `tone` as optional with a
+`'neutral'` default, and the documented `onSelect(label: string)` callback.
+Components show props directly instead of a function's **Parameters** and
+**Returns** sections. Prop descriptions also appear in search and Markdown
+exports. `BadgeProps` keeps its own interface reference page.
+
+React function and class components, `memo`, `forwardRef`, typed component values,
+and generic component props are supported. A custom `useSomething` function that
+calls a compiler-identified React hook receives a React hook label while keeping
+its parameters and returns. Capitalization or a `use` prefix alone is not enough.
+
+For a generated example, see the Fumadocs package's
+[`ApiKindIcon`](/docs/0.x/api/fumadocs/packages/fumadocs/src/components/ApiKindIcon) component and its `kind` and
+`icons` props. This site uses Carbon's React logo for components and hooks;
+the [icon override example](./customization.mdx#icons-and-layout) shows how to
+apply it to both navigation and page content.
+
+### Other frontend frameworks
+
+Solid uses its compiler types and `jsxImportSource`; give React and Solid separate
+inputs and tsconfigs when their JSX settings differ.
+
+Vue and Svelte single-file components use `vue-component-meta` and `svelte2tsx`.
+Select the native files directly or select their directory:
+
+```json title="refquill.json"
+{
+    "output": "docs/components.json",
+    "inputs": [
+        {
+            "language": "typescript",
+            "name": "vue",
+            "tsconfig": "tsconfig.json",
+            "entryPoints": ["src/Card.vue"]
+        },
+        {
+            "language": "typescript",
+            "name": "svelte",
+            "tsconfig": "tsconfig.json",
+            "entryPoints": ["src/Counter.svelte"]
+        }
+    ]
+}
+```
+
+Vue pages include typed props, defaults, emits, slots, and exposed members.
+Svelte supports legacy `export let` and Svelte 5 `$props()` declarations, plus
+slots, events, and exported members. Svelte 5 snippets and callback events remain
+props. A Svelte `<!-- @component ... -->` comment supplies the component summary.
+
+The analyzers do not run application code, framework config files, or custom
+preprocessors. Native components must be selected directly; TypeScript barrel
+re-exports of `.vue` or `.svelte` files are not converted by TypeDoc. Install the
+project's framework dependencies before generating documentation.
+Vue tsconfigs that declare language plugins, including inherited configs, are
+rejected before the checker starts; use a separate documentation tsconfig.
+
+The runnable [framework example](https://github.com/nickwelsh/refquill/tree/main/examples/frameworks-fumadocs)
+combines all four frameworks with TypeScript, PHP, and Rust.
+
+## Relationships and locations
+
+References can link to documented exports. Relationships include inheritance, implementation, inherited members, and overrides. Unknown external targets keep their names without a guessed internal link.
+
+Source locations identify a source line. TypeScript currently reports the same value for `line` and `endLine`. Source groups use paths relative to `sourceRoot` with the TypeScript extension removed.
+
+## Compiler compatibility
+
+The bundled compiler does the analysis even if your project uses another TypeScript version. Syntax or configuration that requires a newer compiler can fail. Refquill must update and test TypeDoc and TypeScript together before supporting a newer pair.
+
+Compiler errors and missing dependencies stop generation and preserve the previous document. TypeDoc can expose members of inline object types. Refquill does not expand every utility or conditional type into a separate graph of declarations.

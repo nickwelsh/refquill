@@ -1,0 +1,55 @@
+---
+title: Troubleshooting
+description: Resolve analysis failures and output protection errors.
+icon: help
+---
+
+## No Refquill binary is installed
+
+In this checkout, run `pnpm build` before using `pnpm refquill`. The build stages a host executable in `packages/cli/native`. For a custom executable, set `REFQUILL_BINARY` to its absolute path.
+
+Release installations require optional dependencies so the package manager can select a platform binary. The package set targets macOS on Apple Silicon (arm64), Linux arm64 and x64, and Windows x64.
+
+## TypeScript analysis fails
+
+Install the analyzed project's dependencies and fix its compiler errors. Confirm that `tsconfig` points at the intended file and that each entry point exports a public declaration.
+
+The bundled analyzer uses TypeScript 6.0.3. A project that requires newer compiler syntax or options may need a Refquill compiler update. The version of TypeScript installed in the project does not replace the bundled analyzer.
+
+## Rust generation fails
+
+Cargo mode needs a compatible nightly toolchain for unstable rustdoc JSON output. Use `toolchain` to select it, or generate compatible JSON separately and configure `rustdoc` instead. Refquill accepts format 61 and rejects private-item output.
+
+If the error reports another format version, use a compiler that emits format 61. For this project's own docs, use Rust 1.99.0 with `pnpm docs:generate`. The docs helper scopes unstable JSON output to the Refquill crate. It does not change the CLI's general Cargo behavior.
+
+Compiler errors, missing targets, and unsupported JSON formats preserve the previous reference. Check that `manifestPath` selects one library or proc-macro crate and set `package` for a workspace manifest.
+
+## A PHPDoc warning appears
+
+Refquill reports parsing issues as diagnostics and retains the available raw tags. Inspect the source location in the warning and correct the annotation. A PHP syntax error fails the run instead of producing a partial reference.
+
+## No public declarations are selected
+
+Each configured input must produce declarations. Check its paths, entry points, exclusions, visibility, and `@internal` annotations. An explicit `exclude` array replaces all default exclusions.
+
+## The output is edited or unmanaged
+
+Refquill checks existing output before replacing it. Restore the original generated artifact, choose a different output path, or pass `--force` if replacement is intentional. Do not format or edit generated JSON by hand.
+
+Symlink outputs are always refused, including with `--force`.
+
+## A lock prevents generation
+
+Another process may be writing the same file. Let it finish. If it crashed, confirm that process has stopped before removing the sidecar `.json.lock` file. Never remove a lock from an active writer.
+
+## A type has no link
+
+The target may be external, excluded, or ambiguous. Include its public declaration or add a frontend `resolveExternal` callback. Refquill retains unresolved names and does not invent target URLs.
+
+## API headings repeat
+
+`ApiReference` renders the page heading. Remove the host page's duplicate `DocsTitle`. If you supply `renderHeader`, its non-nullish result owns the description too.
+
+## The definition panel does not appear
+
+The layout responds to the content container's width. Use a full-width Fumadocs page and avoid placing the reference inside a narrow prose wrapper. Narrow containers intentionally show definitions inline. Check that you imported `@nickwelsh/refquill-fumadocs/style.css`.

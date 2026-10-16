@@ -1,0 +1,96 @@
+name: Stage npm release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: npm-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    name: Validate release tag and versions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      npm-tag: ${{ steps.release.outputs.npm-tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Require an existing matching version tag
+        id: release
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          test "$REF_TYPE" = tag
+          node scripts/validate-release.mjs "$GITHUB_REF_NAME"
+  verify:
+    needs: release
+    uses: ./.github/workflows/ci.yml
+  packages:
+    needs: verify
+    uses: ./.github/workflows/packages.yml
+  docs:
+    needs: [verify, packages]
+    uses: ./.github/workflows/docs.yml
+  stage:
+    name: Stage verified tarballs on npm
+    needs: [release, packages]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Install npm with staged publishing support
+        run: npm install --global npm@11.20.0 --ignore-scripts
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-packages
+          path: packages
+      - name: Verify and stage the exact tested tarballs
+        working-directory: packages
+        env:
+          NPM_TAG: ${{ needs.release.outputs.npm-tag }}
+        run: |
+          sha256sum --check SHA256SUMS
+          for package in *.tgz; do
+            npm stage publish "./$package" --access public --provenance --tag "$NPM_TAG"
+          done
+      - name: Explain manual approval
+        run: echo 'All npm packages are staged. Approve them on npm with your own 2FA to make them publicly installable.' >> "$GITHUB_STEP_SUMMARY"
+  github-release:
+    name: Prepare GitHub release for review
+    needs: stage
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-packages
+          path: packages
+      - name: Create or update a draft with release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            test "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" = true
+          else
+            prerelease=()
+            if [[ "$GITHUB_REF_NAME" == *-* ]]; then prerelease+=(--prerelease); fi
+            gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes "${prerelease[@]}"
+          fi
+          gh release upload "$GITHUB_REF_NAME" packages/* --clobber

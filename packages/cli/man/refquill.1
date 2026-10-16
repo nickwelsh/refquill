@@ -1,0 +1,174 @@
+.TH REFQUILL 1 "October 15, 2026" "Refquill" "User Commands"
+.SH NAME
+refquill \- generate portable PHP, TypeScript, and Rust API references
+.SH SYNOPSIS
+.EX
+refquill init [--config PATH] [--language LANGUAGE]
+refquill generate [CONFIG] [--force]
+refquill validate FILE
+refquill schema --output DIRECTORY
+refquill help [COMMAND]
+refquill --help
+refquill --version
+.EE
+.SH DESCRIPTION
+Refquill analyzes configured PHP, TypeScript, and Rust inputs and writes one
+portable schema-v1 JSON API document. The document contains declarations,
+documentation, types, relationships, diagnostics, and source locations.
+.PP
+The npm CLI requires Node.js 22.18 or newer. PHP analysis uses the bundled
+Rust executable and Mago; PHP and Composer are not required. TypeScript
+analysis uses the bundled TypeDoc and TypeScript compiler.
+.PP
+Rust inputs can import an existing rustdoc JSON file in format 61 or invoke
+Cargo with a compatible nightly toolchain. Cargo generation executes the
+project's build scripts and procedural macros; imported JSON does not.
+.SH COMMANDS
+.TP
+.B init
+Create a small language-specific configuration. The default file is
+refquill.json in the current directory. An existing file is never overwritten.
+.EX
+refquill init --language php
+refquill init --language typescript --config frontend.json
+refquill init --language rust
+.EE
+.TP
+.B generate [CONFIG]
+Analyze every configured input and write the configured output. CONFIG defaults
+to refquill.json in the current directory. Configuration paths are resolved
+relative to the configuration file; sourceRoot defaults to its directory.
+.IP "" 7
+Output is deterministic. Identical output is left untouched. Failed analysis
+preserves the previous artifact. An unmanaged or edited regular output file
+requires an explicit --force. Symlinks and non-regular outputs are rejected.
+.EX
+refquill generate
+refquill generate docs/refquill.json
+refquill generate refquill.json --force
+.EE
+.TP
+.B validate FILE
+Validate a schema-v1 artifact's schema, symbol graph, source paths, and
+integrity fingerprint. Invalid or edited artifacts return a failure status.
+.EX
+refquill validate docs/api.generated.json
+.EE
+.TP
+.B schema
+Write document.schema.json, resolved.schema.json, and config.schema.json to
+the required output directory, creating that directory if necessary.
+Existing schema files in that directory are replaced.
+.EX
+refquill schema --output schemas
+.EE
+.TP
+.B help [COMMAND]
+Print top-level help, or help for a named command.
+.EX
+refquill help
+refquill help generate
+.EE
+.SH OPTIONS
+.SS Common options
+.TP
+.B -h, --help
+Print help for the CLI or a command.
+.EX
+refquill --help
+refquill generate --help
+.EE
+.TP
+.B -V, --version
+Print the CLI version. This option belongs to the top-level CLI.
+.EX
+refquill --version
+.EE
+.SS Init options
+.TP
+.B --config PATH
+Write the new configuration at PATH. Default: refquill.json.
+The parent directory must already exist. The command refuses to overwrite
+any existing file.
+.EX
+refquill init --config backend.json
+.EE
+.TP
+.B --language LANGUAGE
+Select php, typescript, or rust. Default: php. The generated PHP configuration
+selects src; TypeScript selects tsconfig.json and src/index.ts; Rust selects
+Cargo.toml with the nightly toolchain. Edit the configuration before generation.
+.EX
+refquill init --language typescript
+.EE
+.SS Generate options
+.TP
+.B --force
+Allow replacement of an unmanaged or edited regular output file. Use when
+adopting existing output. This does not permit
+overwriting source files, configuration, symlinks, or non-regular files.
+.EX
+refquill generate refquill.json --force
+.EE
+.SS Schema options
+.TP
+.B --output DIRECTORY
+Required. Write the three JSON Schema files to DIRECTORY.
+.EX
+refquill schema --output schemas
+.EE
+.SH FILES
+.TP
+.B refquill.json
+Default configuration. It specifies the output .json file and one or more named
+language inputs. It may also set title, sourceRoot, includeProtected,
+and exclude.
+.TP
+.B docs/api.generated.json
+Output path selected by init's generated configuration. Consumers validate
+or resolve this artifact with @nickwelsh/refquill-schema and render it with
+@nickwelsh/refquill-fumadocs.
+.SH ENVIRONMENT
+.TP
+.B REFQUILL_BINARY
+Override the native executable used by the npm wrapper. Otherwise the wrapper
+uses a locally staged binary or the installed optional platform package.
+.TP
+.B REFQUILL_NODE
+Node executable used for TypeScript analysis when running the native CLI
+directly. The npm wrapper sets this to its own Node executable.
+.TP
+.B REFQUILL_TYPESCRIPT_WORKER
+Path to the TypeScript worker when running the native CLI directly.
+The npm wrapper sets this to its bundled worker.
+.SH EXIT STATUS
+.TP
+.B 0
+The command completed successfully. Analysis warnings can still be emitted
+on standard error.
+.TP
+.B 1
+An operational error occurred, such as invalid configuration, failed analysis,
+invalid artifact, or a refused file replacement.
+.TP
+.B 2
+The command line could not be parsed, such as an unknown option or a missing
+required argument.
+.SH EXAMPLES
+Generate and validate an API document for a PHP project:
+.EX
+npm install --save-dev @nickwelsh/refquill
+npx refquill init --language php
+# Edit refquill.json to select the project's sources.
+npx refquill generate
+npx refquill validate docs/api.generated.json
+.EE
+.PP
+Generate from a configuration outside the current directory:
+.EX
+npx refquill generate ./docs/refquill.json
+.EE
+.SH SEE ALSO
+.UR https://docs.nickwelsh.me/refquill/docs/0.x
+Refquill configuration, language support, and Fumadocs integration
+.UE

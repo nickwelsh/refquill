@@ -1,0 +1,71 @@
+---
+title: CLI reference
+description: Commands, arguments, and environment variables.
+icon: terminal
+---
+
+The npm command package exposes `refquill`. Run it with `npx refquill` in a project that has the CLI installed, or use `pnpm refquill` inside this repository.
+
+The [CLI manual](/docs/0.x/manpage) renders the manpage shipped with Refquill, including command examples, options, files, environment variables, and exit statuses.
+
+## generate
+
+```sh
+refquill generate [config] [--force]
+```
+
+Analyze all configured inputs and write one validated JSON document. `config` defaults to `refquill.json`.
+
+Successful output reports `Generated` or `Unchanged`, the destination, and the number of symbols. PHPDoc parsing diagnostics print as warnings. PHP syntax errors, TypeScript compiler errors, Rust compiler or rustdoc format errors, invalid configurations, and invalid symbol graphs fail the command before replacing output.
+
+Use `--force` only when you intend to replace an edited or unmanaged regular file.
+
+## init
+
+```sh
+refquill init [--config refquill.json] [--language php|typescript|rust]
+```
+
+Create a minimal configuration. The language defaults to `php`. PHP selects `src`; TypeScript selects `src/index.ts` and `tsconfig.json`. Rust selects `Cargo.toml` with the nightly toolchain. All three write `docs/api.generated.json`.
+
+The command fails if the configuration file already exists. Edit an existing file to add another input.
+
+## validate
+
+```sh
+refquill validate <file>
+```
+
+Check the document's schema, graph, and SHA-256 fingerprint. Validation rejects duplicate IDs, invalid indexes, broken references, cyclic parents, cross-input parents, and invalid source paths or ranges.
+
+The JavaScript schema helpers validate shape and graph too. Use this command when you also need to verify the artifact's fingerprint.
+
+## schema
+
+```sh
+refquill schema --output <directory>
+```
+
+Write `document.schema.json`, `resolved.schema.json`, and `config.schema.json` from the Rust models. This command writes schema files into the supplied directory. It does not generate an API reference or TypeScript declarations.
+
+Repository contributors should run `pnpm schema` instead, which also generates TypeScript declarations. Run `pnpm schema:check` to detect drift.
+
+## Help and version
+
+```sh
+refquill --help
+refquill generate --help
+refquill --version
+```
+
+Commands return a nonzero exit status on failure. Do not parse the human-readable log output as an API. Consume the generated JSON document.
+
+## Environment variables
+
+| Variable                     | Owner       | Use                                                                                                         |
+| ---------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `REFQUILL_BINARY`            | npm wrapper | Choose an executable instead of the staged or platform package binary.                                      |
+| `REFQUILL_TYPESCRIPT_WORKER` | Rust CLI    | Set the TypeScript worker path for direct Rust invocation. The wrapper supplies its bundled worker.         |
+| `REFQUILL_NODE`              | Rust CLI    | Select Node for the worker. Direct invocation defaults to `node`; the wrapper uses its own Node executable. |
+
+The wrapper supplies the worker and Node variables when it starts the native executable. Use the wrapper for normal TypeScript generation.

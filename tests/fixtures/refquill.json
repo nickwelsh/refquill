@@ -1,0 +1,1 @@
+{"title":"Mixed API reference","output":"../output/mixed.json","inputs":[{"language":"php","name":"backend","paths":["php/Api.php"]},{"language":"typescript","name":"frontend","tsconfig":"typescript/tsconfig.json","entryPoints":["typescript/index.ts"]}]}

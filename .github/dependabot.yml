@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    ignore:
+      # TypeDoc 0.28.20 supports TypeScript through 6.0.x; upgrade the compiler stack together.
+      - dependency-name: typescript
+        versions: ['>=6.1.0']
+      # Vite's React plugin currently requires the 0.152.x transformer series.
+      - dependency-name: oxc-transform-react
+        versions: ['>=0.153.0']
+      # The installed Waku release has a version-specific request-handling patch.
+      - dependency-name: waku
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ['*']
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        patterns: ['*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

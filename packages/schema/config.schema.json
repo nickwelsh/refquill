@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "default": "API reference"
+    },
+    "output": {
+      "type": "string"
+    },
+    "sourceRoot": {
+      "type": "string",
+      "default": "."
+    },
+    "includeProtected": {
+      "type": "boolean",
+      "default": false
+    },
+    "exclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "**/vendor/**",
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/target/**"
+      ]
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Input"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "output",
+    "inputs"
+  ],
+  "$defs": {
+    "Input": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "const": "php"
+            },
+            "name": {
+              "type": "string"
+            },
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "language",
+            "name",
+            "paths"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "const": "typescript"
+            },
+            "name": {
+              "type": "string"
+            },
+            "tsconfig": {
+              "type": "string"
+            },
+            "entryPoints": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "language",
+            "name",
+            "tsconfig",
+            "entryPoints"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "const": "rust"
+            },
+            "name": {
+              "type": "string"
+            },
+            "rustdoc": {
+              "description": "Import an existing rustdoc JSON file, without running project code.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "manifestPath": {
+              "description": "Generate JSON for a Cargo library (requires a compatible nightly).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "package": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "toolchain": {
+              "description": "Optional rustup toolchain; omitted means the current Cargo toolchain.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allFeatures": {
+              "type": "boolean"
+            },
+            "noDefaultFeatures": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "language",
+            "name"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+---
+title: Installation
+description: Install the CLI, schema tools, and Fumadocs integration.
+icon: download
+---
+
+## Install the CLI
+
+The npm CLI requires Node.js 22.18 or later. Install it in the project you want to document:
+
+```sh
+npm install --save-dev @nickwelsh/refquill
+npx refquill --version
+```
+
+Refquill includes the native executable and its TypeScript worker. PHP analysis needs no PHP runtime or Composer dependency. TypeScript analysis uses bundled TypeScript 6.0.3 and TypeDoc 0.28.20; install your project's dependencies before generation.
+
+Rust Cargo analysis needs a compatible nightly that emits rustdoc JSON format 61. Importing existing rustdoc JSON needs no compiler at analysis time. The [Rust guide](./rust.mdx) explains both paths.
+
+Follow the [quickstart](./quickstart.mdx) to create a configuration and generate your first reference. Paths inside the configuration resolve relative to that file, independently of your shell's current directory.
+
+## Install a frontend
+
+For an existing Fumadocs 16 and React 19 site:
+
+```sh
+npm install @nickwelsh/refquill-fumadocs
+```
+
+Follow the [Fumadocs integration guide](./fumadocs.mdx) to add routes and rendering. The adapter expects Fumadocs 16.17.1 or a compatible 16.x release and React 19.
+
+To consume the document in another frontend:
+
+```sh
+npm install @nickwelsh/refquill-schema
+```
+
+The [document format guide](./schema.mdx) shows validation and resolution helpers.
+
+## Native executables
+
+Prebuilt executables support macOS on Apple Silicon (arm64), Linux arm64 and x64, and Windows x64. Linux executables use musl. The npm wrapper selects an optional package for the current platform. Keep optional dependencies enabled when installing. There is no postinstall download or compilation step.
+
+Set `REFQUILL_BINARY` to an absolute executable path to override selection. The wrapper still supplies the TypeScript worker and Node paths.
+
+A direct Rust executable can analyze PHP without Node. For TypeScript, prefer the npm wrapper. Direct invocation requires `REFQUILL_TYPESCRIPT_WORKER` and optionally `REFQUILL_NODE`, whose default is `node`.
+
+## Build from source
+
+Contributors and users on other platforms can build from the [GitHub repository](https://github.com/nickwelsh/refquill). Install Rust 1.99 or later, Node.js 22.18 or later, and pnpm 11.24.0:
+
+```sh
+git clone https://github.com/nickwelsh/refquill.git
+cd refquill
+pnpm install --frozen-lockfile
+pnpm build
+pnpm refquill --version
+```
+
+`pnpm build` compiles the Rust executable, stages it in the command package, and builds the Fumadocs package. Run it again after changing the Rust CLI or Fumadocs source. Use `pnpm refquill` in this checkout, or pass a project's configuration explicitly:
+
+```sh
+pnpm refquill generate /path/to/project/refquill.json
+pnpm refquill validate /path/to/project/docs/api.generated.json
+```
+
+Inside this monorepo, frontend packages use `workspace:*` dependencies. The [development guide](./development.mdx) covers the repository's docs and verification commands.

@@ -1,0 +1,108 @@
+---
+title: Rust analysis
+description: Generate API references from Cargo libraries or existing rustdoc JSON.
+icon: code
+---
+
+Refquill reads the public API produced by rustdoc. It supports rustdoc JSON format 61, verified with Rust 1.99.0. A different format version fails generation and preserves the previous artifact.
+
+The [Refquill crate reference](/docs/0.x/api/refquill) uses this analyzer on the project's own Rust library. It covers the public modules, model types, methods, and implementations.
+
+## Generate with Cargo
+
+Use a compatible nightly Rust toolchain for rustdoc's unstable JSON output:
+
+```json title="refquill.json"
+{
+    "output": "docs/api.generated.json",
+    "inputs": [
+        {
+            "language": "rust",
+            "name": "library",
+            "manifestPath": "Cargo.toml",
+            "toolchain": "nightly"
+        }
+    ]
+}
+```
+
+```sh
+refquill generate
+refquill validate docs/api.generated.json
+```
+
+The manifest must select one library or proc-macro target. Set `package` when selecting a member through a workspace manifest. Omit `toolchain` to use the current Cargo toolchain. Pin a compatible nightly in CI because rustdoc's JSON format can change.
+
+Cargo mode compiles dependencies and executes build scripts and procedural macros. Use it with projects you trust. It writes into a fresh temporary target directory so a failed build cannot supply stale JSON.
+
+## Reuse existing rustdoc JSON
+
+Generate the JSON yourself when you need Cargo's normal build cache or custom compiler settings:
+
+```sh
+cargo +nightly rustdoc --lib -- -Z unstable-options --output-format json
+```
+
+Then import it:
+
+```json title="refquill.json"
+{
+    "output": "docs/api.generated.json",
+    "inputs": [
+        {
+            "language": "rust",
+            "name": "library",
+            "rustdoc": "target/doc/my_crate.json"
+        }
+    ]
+}
+```
+
+Replace `my_crate.json` with the file rustdoc writes for your library. Set `sourceRoot` to the working directory rustdoc used for relative source spans. Running Cargo from a workspace root normally produces workspace-relative spans.
+
+JSON import needs no compiler and does not execute build scripts or macros. Use exactly one of `rustdoc` and `manifestPath`. Cargo options require `manifestPath`. Refquill rejects JSON generated with private items enabled.
+
+Implementation members inherit their trait's description when they have no description of their own. To include documentation from dependency traits, generate their JSON beside your crate's JSON:
+
+```sh
+RUSTDOCFLAGS="-Z unstable-options --output-format json" cargo +nightly doc --lib
+```
+
+Refquill reads companion `<crate>.json` files for the external traits used by your implementations. Companions must use format 61 and exclude private items. Missing companions leave the implementation's own documentation available. Dependency links use compiler-recorded documentation roots.
+
+## Select Cargo features
+
+| Option              | Effect                                 |
+| ------------------- | -------------------------------------- |
+| `package`           | Select one package from the workspace. |
+| `toolchain`         | Select a rustup toolchain for Cargo.   |
+| `features`          | Enable the listed Cargo features.      |
+| `allFeatures`       | Enable all Cargo features.             |
+| `noDefaultFeatures` | Disable default Cargo features.        |
+
+Each document reflects one target and feature configuration. Generate separate references if you need to document different configurations.
+
+## Supported declarations
+
+Refquill extracts modules, structs, unions, enums and payloads, traits, trait aliases, functions, constants, statics, type aliases, macros, primitives, foreign types, and public re-exports. Implementations expose associated functions, methods, constants, and types on their owning type page.
+
+Rustdoc resolves visibility, macro expansion, imports, and `#[doc(hidden)]` before Refquill applies source exclusions. `includeProtected` does not affect Rust. Comments retain Markdown, deprecation, attributes, and compiler-resolved intra-doc links.
+
+The common model stores signatures, generic bounds, lifetimes, const parameters, source spans, and relationships. Type syntax comes from rustdoc's structured types.
+
+## Retained compiler data
+
+A per-input `rustdoc` snapshot keeps compiler-native item and type information, external-crate metadata, paths, and documentation link IDs. `symbol.rustdocId` points into that snapshot. Native IDs are local to the snapshot and are separate from Refquill's public symbol IDs.
+
+The Fumadocs renderer displays multiline Rust declarations and groups implementations on their owning type pages. Search and direct links target anchors for implementations and associated items. External types, traits, and intra-doc links use the paths and documentation roots recorded by rustdoc. A dependency without a recorded root needs the host's `resolveExternal` callback. The renderer also supports Markdown exports. It does not reproduce rustdoc's interactive search engine, source browser, doctest runner, target and feature matrix, or specialized HTML widgets. Source paths are normalized and excluded items are removed from the retained snapshot.
+
+## Generate this project's Rust reference
+
+From the Refquill repository root:
+
+```sh
+pnpm docs:generate
+pnpm --filter @refquill/docs api:validate
+```
+
+The docs command builds the local packages, generates `target/doc/refquill.json` and dependency JSON, and combines the Rust library with the Fumadocs and schema package references. Registry dependency links point to the versions selected by Cargo on docs.rs. The [development guide](./development.mdx) explains the compiler setup used by this checkout.

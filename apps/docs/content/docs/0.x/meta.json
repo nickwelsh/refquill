@@ -1,0 +1,29 @@
+{
+    "title": "0.x",
+    "root": "version",
+    "version": {
+        "status": "latest",
+        "badges": []
+    },
+    "pages": [
+        "index",
+        "installation",
+        "quickstart",
+        "configuration",
+        "cli",
+        "manpage",
+        "php",
+        "typescript",
+        "rust",
+        "fumadocs",
+        "reference-documents",
+        "json-schema",
+        "manpages",
+        "customization",
+        "schema",
+        "troubleshooting",
+        "development",
+        "api",
+        "schemas"
+    ]
+}

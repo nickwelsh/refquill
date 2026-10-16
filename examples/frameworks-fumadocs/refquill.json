@@ -1,0 +1,15 @@
+{
+  "$schema": "../../packages/schema/config.schema.json",
+  "title": "Frameworks and languages",
+  "sourceRoot": "../..",
+  "output": "generated/api.json",
+  "inputs": [
+    { "language": "typescript", "name": "react", "tsconfig": "tsconfig.react.json", "entryPoints": ["src/react.tsx"] },
+    { "language": "typescript", "name": "solid", "tsconfig": "tsconfig.solid.json", "entryPoints": ["src/solid.tsx"] },
+    { "language": "typescript", "name": "vue", "tsconfig": "tsconfig.components.json", "entryPoints": ["src/VueCard.vue"] },
+    { "language": "typescript", "name": "svelte", "tsconfig": "tsconfig.components.json", "entryPoints": ["src/SvelteCard.svelte"] },
+    { "language": "typescript", "name": "typescript", "tsconfig": "tsconfig.react.json", "entryPoints": ["src/typescript.ts"] },
+    { "language": "php", "name": "php", "paths": ["src/Greeter.php"] },
+    { "language": "rust", "name": "rust", "rustdoc": "../../tests/fixtures/rust/rustdoc.json" }
+  ]
+}

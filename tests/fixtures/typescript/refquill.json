@@ -1,0 +1,1 @@
+{"title":"TypeScript test API reference","output":"../../output/typescript.json","inputs":[{"language":"typescript","name":"frontend","tsconfig":"tsconfig.json","entryPoints":["index.ts"]}]}

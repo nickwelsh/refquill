@@ -1,0 +1,26 @@
+{
+  "name": "refquill-rust-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "cargo run --locked --manifest-path ../../Cargo.toml -- generate ../../tests/fixtures/rust/refquill.json",
+    "predev": "pnpm generate && pnpm --filter @nickwelsh/refquill-fumadocs build",
+    "dev": "node --import tsx server.tsx",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nickwelsh/refquill-fumadocs": "workspace:*",
+    "fumadocs-core": "16.17.2",
+    "fumadocs-ui": "16.17.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "esbuild": "0.28.2",
+    "tsx": "^4.20.6",
+    "typescript": "~6.0.3"
+  }
+}

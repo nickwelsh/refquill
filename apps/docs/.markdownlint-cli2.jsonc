@@ -1,0 +1,10 @@
+{
+    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+    "config": {
+        "line-length": false,
+        "no-inline-html": { "allowed_elements": ["Cards", "Card", "Note"] },
+    },
+    "gitignore": true,
+    "globs": ["**/*.md", "content/**/*.mdx"],
+    "ignores": [".agents/**", ".ai/**", ".claude/**", "AGENTS.md", "CLAUDE.md"],
+}

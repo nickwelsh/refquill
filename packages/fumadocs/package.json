@@ -1,0 +1,68 @@
+{
+  "name": "@nickwelsh/refquill-fumadocs",
+  "version": "0.1.0",
+  "description": "Fumadocs sources and React reference pages for Refquill JSON, JSON Schema, and manpages",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "src/style.css",
+    "THIRD_PARTY_NOTICES"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./components": {
+      "types": "./dist/components.d.ts",
+      "import": "./dist/components.js"
+    },
+    "./style.css": "./src/style.css"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "pretest": "cargo run --locked --manifest-path ../../Cargo.toml -- generate ../../tests/fixtures/refquill.json && cargo run --locked --manifest-path ../../Cargo.toml -- generate ../../tests/fixtures/rust/refquill.json",
+    "test": "node --import tsx --test tests/*.test.ts*"
+  },
+  "dependencies": {
+    "@nickwelsh/refquill-schema": "workspace:*",
+    "hast-util-to-jsx-runtime": "^2.3.6",
+    "lucide-react": "^1.56.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "shiki": "^4.5.0",
+    "unified": "^11.0.5"
+  },
+  "peerDependencies": {
+    "fumadocs-core": "^16.17.1",
+    "fumadocs-ui": "^16.17.1",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "fumadocs-core": "16.17.2",
+    "fumadocs-ui": "16.17.2",
+    "parse5": "^8.0.1",
+    "react-dom": "^19.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickwelsh/refquill.git",
+    "directory": "packages/fumadocs"
+  },
+  "homepage": "https://docs.nickwelsh.me/refquill/",
+  "bugs": {
+    "url": "https://github.com/nickwelsh/refquill/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

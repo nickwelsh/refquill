@@ -1,0 +1,25 @@
+[package]
+name = "refquill"
+description = "A shared JSON API reference pipeline for PHP, TypeScript, and Rust"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = "1"
+mago-allocator = "=1.56.3"
+clap = { version = "4", features = ["derive"] }
+globset = "0.4"
+jsonschema = { version = "0.58", default-features = false }
+mago-database = "=1.56.3"
+mago-phpdoc-syntax = "=1.56.3"
+mago-names = "=1.56.3"
+mago-span = "=1.56.3"
+mago-syntax = "=1.56.3"
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+tempfile = "3"
+walkdir = "2"

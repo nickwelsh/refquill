@@ -1,0 +1,101 @@
+---
+title: Develop and build the docs
+description: Run this site, regenerate its references, and verify changes.
+icon: development
+---
+
+## Run the site
+
+From the repository root:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm docs:dev
+```
+
+Open the local URL printed by Waku. `/refquill/` is the landing page, `/refquill/docs/0.x` contains the guides, and `/refquill/docs/0.x/api` contains the generated package reference. The public site updates on each version tag.
+
+The site lives in `apps/docs` and uses Waku, Fumadocs, and Intent UI. It includes search, theme control, responsive navigation, link previews, Markdown exports, and Open Graph images.
+
+## Generate Refquill's own reference
+
+```sh
+pnpm docs:generate
+pnpm --filter @refquill/docs api:validate
+```
+
+The root `refquill.json` selects the Fumadocs package's public `index.ts` and `components.tsx` entry points and the schema package's `index.d.ts`. A third input imports rustdoc JSON for the `refquill` Rust library. It writes `apps/docs/src/generated/api.json` through Refquill's own CLI.
+
+Both `docs:dev` and `docs:build` build the workspace packages and regenerate the reference first. While a dev server is already running, regenerate manually after changing package exports or comments. Commit the artifact with those changes. Do not format its JSON.
+
+`pnpm docs:rustdoc` runs Cargo rustdoc for the library and writes `target/doc/refquill.json` with Cargo's normal build cache. Every `api:generate` run calls it before importing that JSON. The helper uses Rust 1.99.0 and scopes `RUSTC_BOOTSTRAP=1` to this docs-only subprocess to enable format-61 JSON output on the installed stable compiler. The Refquill CLI does not set that variable.
+
+The generated Rust section covers the public `artifact`, `config`, `model`, `php`, `rust`, `rust_cargo`, `typescript`, and `wire` modules, plus their types and implementations. The private binary entry point has authored [CLI documentation](./cli.mdx).
+
+Rustdoc retains the compiler target and feature configuration. The native snapshot can differ between macOS and Linux, so CI regenerates and validates the docs on its runner instead of comparing the full artifact with another host's bytes.
+
+## Edit content
+
+Author MDX in `apps/docs/content/docs/0.x`. `meta.json` controls sidebar order. The API section comes from virtual pages, so it does not need generated MDX files. `src/lib/shared.ts` owns the site name and repository links.
+
+Use sentence case headings and plain descriptions. Explain the command, field, or behavior a reader needs. Keep examples tied to supported syntax and actual package exports.
+
+## Verify and build
+
+```sh
+pnpm docs:build
+pnpm docs:check
+pnpm --filter @refquill/docs lint:check
+pnpm --filter @refquill/docs format:check
+pnpm docs:smoke
+pnpm docs:deploy:check
+pnpm --filter @refquill/docs start
+```
+
+The production build uses Waku's static Cloudflare adapter to generate the complete site in `apps/docs/dist`. Guide and API pages, Markdown and LLM exports, Open Graph images, and the search index are produced at build time. Search runs in the browser against the generated index, including version filters. Cloudflare Workers serves the generated assets. `start` previews the output with Wrangler locally, using `apps/docs/wrangler.jsonc`. `docs:smoke` checks the built site over HTTP, and `docs:deploy:check` performs a Wrangler dry run.
+
+The public site is [docs.nickwelsh.me/refquill](https://docs.nickwelsh.me/refquill). Its `/refquill/` base path applies to guides, search, Markdown exports, Open Graph images, and assets. Rebuild and deploy the complete asset output after changing content or package APIs.
+
+## Deploy to Cloudflare
+
+The `refquill-docs` Worker serves the `docs.nickwelsh.me/refquill` and `docs.nickwelsh.me/refquill/*` routes configured in `apps/docs/wrangler.jsonc`. The `nickwelsh.me` zone must have proxied DNS for `docs.nickwelsh.me`.
+
+The release workflow builds the `0.x` docs from each version tag. After verification and package tests pass, it deploys the exact tested assets. Branch pushes run checks without deploying. Publishing a GitHub release does not trigger a separate docs deployment.
+
+Configure the `cloudflare` GitHub environment with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, and allow deployments from `v0.*` tags. The token needs permission to deploy the Worker and update routes for the zone.
+
+To deploy a verified local build with Wrangler credentials configured:
+
+```sh
+pnpm docs:build
+pnpm docs:check
+pnpm docs:smoke
+pnpm docs:deploy:check
+pnpm --filter @refquill/docs run deploy
+```
+
+The root pnpm workspace applies a patch for Waku 1.0.0-rc.2 during installation. It materializes Hono's lazy request before Waku's Node API handler constructs a Request. This preserves Node request handling during local development; the deployed site serves generated assets.
+
+## Repository checks
+
+```sh
+pnpm test
+pnpm check
+pnpm schema:check
+```
+
+Schema changes belong in the Rust model. Run `pnpm schema` to regenerate JSON Schemas and TypeScript declarations, then regenerate the site reference.
+
+CI runs the workspace build, formatting and Clippy/type checks, schema drift
+checks, Rust/CLI/frontend tests, and the docs build and checks. The release
+workflows also build native binaries for all four supported targets, run them on
+matching hosts, and verify the packed npm packages in isolated consumers before
+staging a release. Successful local checks do not replace those release checks.
+
+The checked-in Rust fixture covers compiler imports without a nightly install.
+Cargo integration tests exercise actual compilation; framework tests reuse the
+source files in `examples/frameworks-fumadocs`.
+
+For analyzer and output ownership details, read the repository's [architecture notes](https://github.com/nickwelsh/refquill/blob/main/docs/architecture.md).
+
+The production build renders all docs pages and Open Graph images ahead of deployment. Implementations and their associated items appear on the owning type page and have searchable anchors. Generated Markdown exports include the complete reference.

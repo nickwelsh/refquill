@@ -1,0 +1,75 @@
+---
+title: Document format
+description: Validate the compact JSON document or resolve it for a frontend.
+icon: data-table
+---
+
+The current document format is schema version 1. Package versions and schema versions are independent. A package release can keep the same document contract.
+
+Browse the [document schema](/docs/0.x/schemas/document) for the compact JSON artifact and the [resolved document schema](/docs/0.x/schemas/resolved) for complete frontend records. The [JSON schemas overview](./schemas/index.mdx) explains all four schemas Refquill ships.
+
+## Read a document
+
+```ts
+import { parseDocument, resolveDocument, type Document, type ResolvedDocument } from '@nickwelsh/refquill-schema';
+
+const input: unknown = JSON.parse(json);
+const wire: Document = parseDocument(input);
+const resolved: ResolvedDocument = resolveDocument(input);
+```
+
+`parseDocument` validates the compact wire document and returns it. `resolveDocument` validates it and returns complete symbols with defaults, inherited metadata, and references expanded. Neither helper mutates the input.
+
+Resolved type objects can be shared between symbols. Treat them as immutable or clone before changing them. Both helpers throw on invalid input. They validate shape and graph; the [CLI validate command](./cli.mdx#validate) also verifies the fingerprint.
+
+## Wire and resolved types
+
+| Wire document                              | Resolved document                              |
+| ------------------------------------------ | ---------------------------------------------- |
+| `Document`, `CompactSymbol`                | `ResolvedDocument`, `Symbol`                   |
+| Shared input and type tables               | Input metadata and type objects on each symbol |
+| Numeric indexes for references and parents | Public IDs for references and parents          |
+| Omitted defaults and inherited values      | Complete fields                                |
+
+A wire document has `schemaVersion`, `generator`, `title`, `fingerprint`, `inputs`, `types`, and `symbols`. `diagnostics` and `rustdoc` can be omitted when empty. The `inputs` table stores each input's name and language. The `types` table stores complete type text and reference metadata.
+
+Numeric references point into the appropriate table. A missing or null target means unresolved. It does not mean index zero. Public symbol IDs are opaque strings scoped to an input. Do not parse them to construct routes.
+
+Members can inherit their group and source filename from a parent. Qualified names can be reconstructed by language. Signature declarations and descriptions can inherit from the symbol. The resolver applies these rules so frontends do not have to repeat them.
+
+## Framework metadata
+
+Frontend components retain their original TypeScript `kind` and add optional
+`framework` metadata. Its `name` identifies `react`, `solid`, `vue`, or `svelte`,
+and its `role` is `component` or `hook`. Components can carry `props`, `events`,
+`slots`, and `exposed` members. These use the same parameter and signature
+contracts as ordinary APIs, including type references, descriptions, defaults,
+nested properties, and callback signatures.
+
+In compact JSON, framework member types refer to the shared `types` table.
+`resolveDocument` expands them for consumers. The Fumadocs adapter derives
+presentation keys such as `react-component` and `react-hook` from this metadata;
+they are not new analyzer symbol kinds. See [frontend component analysis](./typescript.mdx#frontend-components)
+for supported declarations and framework setup.
+
+## Rust compiler metadata
+
+Rust symbols use `language: "rust"`. The shared model includes structs, unions, implementations, macros, primitives, foreign types, trait aliases, and re-exports alongside the existing kinds.
+
+The optional `rustdoc` array stores one `{ api, data }` snapshot per Rust input. `data.format_version` identifies rustdoc's own JSON format. A symbol's `rustdocId` points into that snapshot's `data.index`. These native IDs belong to that snapshot and are separate from stable Refquill IDs.
+
+The snapshot retains compiler type structure, paths, documentation links, external-crate metadata, and implementation details. Refquill normalizes source paths and removes excluded items. The fingerprint covers the snapshot too.
+
+## Validation and integrity
+
+The package ships JSON Schema 2020-12 and generated TypeScript declarations. Runtime validators also check pointer bounds, duplicate IDs and inputs, parent cycles, cross-input parents, and portable source paths and ranges. They validate unused type entries too.
+
+The JavaScript helpers check for plain, acyclic JSON before recursive validation.
+They limit JSON depth to 64, containers to 500,000, values to 2,000,000, and
+combined key/string length to 64 Mi UTF-16 code units, including rustdoc snapshots.
+These frontend parser limits are separate from the wire schema. A flat parent
+graph can contain long chains without increasing JSON depth.
+
+Generation sorts symbols by public ID and assigns shared table indexes deterministically. It omits timestamps. The SHA-256 fingerprint covers wire JSON with recursively sorted object keys and an empty fingerprint field. Whitespace and object key order do not affect it. Array order does.
+
+The [repository format specification](https://github.com/nickwelsh/refquill/blob/main/docs/output-format.md) defines every default and inheritance rule. The [generated schema API](/docs/0.x/api/schema) documents the exported types and functions.

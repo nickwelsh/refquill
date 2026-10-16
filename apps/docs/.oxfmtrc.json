@@ -1,0 +1,23 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "htmlWhitespaceSensitivity": "css",
+    "ignorePatterns": [".agents/**", "skills-lock.json", "src/generated/**", ".source/**", "src/pages.gen.ts"],
+    "overrides": [
+        {
+            "files": ["**/*.{yaml,yml}"],
+            "options": {
+                "tabWidth": 2
+            }
+        }
+    ],
+    "printWidth": 120,
+    "semi": true,
+    "singleAttributePerLine": false,
+    "singleQuote": true,
+    "sortPackageJson": true,
+    "sortTailwindcss": {
+        "stylesheet": "src/styles/globals.css",
+        "functions": ["clsx", "cn", "cva"]
+    },
+    "tabWidth": 4
+}

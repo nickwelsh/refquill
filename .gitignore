@@ -1,0 +1,14 @@
+/target/
+node_modules/
+.pnpm-store/
+dist/
+*.tgz
+.DS_Store
+/.playground/
+/packages/cli/native/
+/tests/output/
+/examples/frameworks-fumadocs/generated/
+/.release/
+/apps/docs/.source/
+/apps/docs/src/pages.gen.ts
+.wrangler/

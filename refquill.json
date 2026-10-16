@@ -1,0 +1,24 @@
+{
+  "$schema": "./packages/schema/config.schema.json",
+  "title": "Refquill API reference",
+  "output": "apps/docs/src/generated/api.json",
+  "inputs": [
+    {
+      "language": "rust",
+      "name": "refquill",
+      "rustdoc": "target/doc/refquill.json"
+    },
+    {
+      "language": "typescript",
+      "name": "fumadocs",
+      "tsconfig": "packages/fumadocs/tsconfig.json",
+      "entryPoints": ["packages/fumadocs/src/index.ts", "packages/fumadocs/src/components.tsx"]
+    },
+    {
+      "language": "typescript",
+      "name": "schema",
+      "tsconfig": "apps/docs/tsconfig.reference.json",
+      "entryPoints": ["packages/schema/index.d.ts"]
+    }
+  ]
+}

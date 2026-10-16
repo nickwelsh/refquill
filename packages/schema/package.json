@@ -1,0 +1,43 @@
+{
+  "name": "@nickwelsh/refquill-schema",
+  "version": "0.1.0",
+  "description": "The versioned Refquill JSON document contract",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "*.json",
+    "*.d.ts",
+    "*.js"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./document.json": "./document.schema.json",
+    "./config.json": "./config.schema.json",
+    "./reference": {
+      "types": "./reference.d.ts",
+      "import": "./reference.js"
+    },
+    "./reference.json": "./reference.schema.json"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickwelsh/refquill.git",
+    "directory": "packages/schema"
+  },
+  "homepage": "https://docs.nickwelsh.me/refquill/",
+  "bugs": {
+    "url": "https://github.com/nickwelsh/refquill/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}

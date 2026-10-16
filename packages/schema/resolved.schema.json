@@ -1,0 +1,708 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ResolvedDocument",
+  "description": "Complete semantic model for analyzers and the resolved frontend projection.\nThe compact public JSON contract is owned by `wire`.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "generator": {
+      "$ref": "#/$defs/Generator"
+    },
+    "title": {
+      "type": "string"
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Symbol"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      }
+    },
+    "rustdoc": {
+      "description": "Compiler-native Rust documentation, retained once per configured input.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RustdocCrate"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generator",
+    "title",
+    "fingerprint",
+    "symbols",
+    "diagnostics"
+  ],
+  "$defs": {
+    "Generator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^refquill$"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "Symbol": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "$ref": "#/$defs/Language"
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "qualifiedName": {
+          "type": "string"
+        },
+        "api": {
+          "description": "The configured input name (for example, backend or frontend); scopes symbols in the API reference and prevents identity collisions.",
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "declaration": {
+          "description": "Declaration only, never an implementation body.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Markdown, with raw HTML treated as text by renderers.",
+          "type": "string"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "promoted": {
+          "description": "PHP property declared by constructor parameter promotion.",
+          "type": "boolean",
+          "default": false
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Signature"
+          }
+        },
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TypeParameter"
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Relation"
+          }
+        },
+        "tags": {
+          "description": "Unrecognized language-specific tags are retained, not silently discarded.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Tag"
+          }
+        },
+        "rustdocId": {
+          "description": "Item key in this input's preserved rustdoc index.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "framework": {
+          "description": "Compiler-derived frontend framework semantics, independent of language kind.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FrameworkMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "language",
+        "kind",
+        "name",
+        "qualifiedName",
+        "api",
+        "group",
+        "declaration",
+        "description",
+        "deprecated",
+        "modifiers",
+        "signatures",
+        "typeParameters",
+        "relations",
+        "tags"
+      ]
+    },
+    "Language": {
+      "type": "string",
+      "enum": [
+        "php",
+        "typescript",
+        "rust"
+      ]
+    },
+    "Kind": {
+      "type": "string",
+      "enum": [
+        "class",
+        "interface",
+        "trait",
+        "enum",
+        "enum-case",
+        "function",
+        "method",
+        "constructor",
+        "property",
+        "constant",
+        "variable",
+        "type-alias",
+        "namespace",
+        "module",
+        "accessor",
+        "struct",
+        "union",
+        "impl",
+        "macro",
+        "primitive",
+        "extern-type",
+        "reexport",
+        "trait-alias"
+      ]
+    },
+    "Source": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Portable path relative to the config's sourceRoot; never an absolute path.",
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "line",
+        "endLine"
+      ]
+    },
+    "Type": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "Original or compiler-rendered syntax. No lossy cross-language type grammar.",
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        },
+        "structure": {
+          "description": "Optional compiler-provided composition for readable type documentation.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeStructure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "references"
+      ]
+    },
+    "Reference": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "targetId": {
+          "description": "Null means an external, excluded, or otherwise undocumented declaration.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "package": {
+          "description": "Compiler-identified external package, such as @types/react.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "qualifiedName": {
+          "description": "Name within the external package, such as React.JSX.Element.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "TypeStructure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "union"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Type"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "types"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "intersection"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Type"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "types"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "generic"
+            },
+            "name": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Type"
+              }
+            },
+            "argumentParameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TypeArgumentParameter"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "arguments"
+          ]
+        }
+      ]
+    },
+    "TypeArgumentParameter": {
+      "description": "Formal parameter names and documentation from the generic declaration.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "Signature": {
+      "type": "object",
+      "properties": {
+        "declaration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "returns": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "returnsDescription": {
+          "type": "string"
+        },
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TypeParameter"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "declaration",
+        "description",
+        "parameters",
+        "returnsDescription",
+        "typeParameters"
+      ]
+    },
+    "Parameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "variadic": {
+          "type": "boolean"
+        },
+        "byReference": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "properties": {
+          "description": "Compiler-provided object properties, including nested parameter shapes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "signatures": {
+          "description": "Call signatures of a callback-valued parameter or property.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Signature"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description",
+        "optional",
+        "variadic",
+        "byReference"
+      ]
+    },
+    "TypeParameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "constraint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Type"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "description"
+      ]
+    },
+    "Relation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name"
+      ]
+    },
+    "RelationKind": {
+      "type": "string",
+      "enum": [
+        "extends",
+        "implements",
+        "uses",
+        "inherited-from",
+        "overrides",
+        "reexports"
+      ]
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "text"
+      ]
+    },
+    "FrameworkMetadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Framework"
+        },
+        "role": {
+          "$ref": "#/$defs/FrameworkRole"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        },
+        "exposed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Parameter"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role"
+      ]
+    },
+    "Framework": {
+      "type": "string",
+      "enum": [
+        "react",
+        "vue",
+        "svelte",
+        "solid"
+      ]
+    },
+    "FrameworkRole": {
+      "type": "string",
+      "enum": [
+        "component",
+        "hook"
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "message"
+      ]
+    },
+    "RustdocCrate": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "description": "The configured Rust input name.",
+          "type": "string"
+        },
+        "data": {
+          "description": "Original rustdoc JSON, with portable source paths and excluded items removed.\nIts format_version identifies the upstream unstable rustdoc format.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "api",
+        "data"
+      ]
+    }
+  }
+}

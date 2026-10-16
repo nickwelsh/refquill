@@ -1,0 +1,71 @@
+---
+title: Render manpages
+description: Turn roff source or terminal manpage text into reference pages.
+icon: book
+---
+
+`createManPageReference({ input, baseUrl, title?, sourceUrl?, format? })` parses
+manpage text into one virtual page. Read `.1` files in the host build/server layer;
+the adapter has no filesystem, subprocess, or network dependency. The CLI ships
+its manual at `@nickwelsh/refquill/manpage`, resolvable with `import.meta.resolve`.
+
+```tsx
+import { readFileSync } from 'node:fs';
+import { loader } from 'fumadocs-core/source';
+import { DocsBody, DocsPage } from 'fumadocs-ui/page';
+import { createManPageReference } from '@nickwelsh/refquill-fumadocs';
+import { ManPageReference } from '@nickwelsh/refquill-fumadocs/components';
+import '@nickwelsh/refquill-fumadocs/style.css';
+
+const reference = createManPageReference({
+    input: readFileSync(new URL(import.meta.resolve('@nickwelsh/refquill/manpage')), 'utf8'),
+    baseUrl: '/reference/cli',
+});
+const source = loader({ baseUrl: reference.baseUrl, source: reference.toFumadocsSource() });
+// Pass source.pageTree to the layout and page.data.toc to DocsPage.
+<DocsPage full toc={page.data.toc}>
+    <DocsBody>
+        <ManPageReference reference={reference} />
+    </DocsBody>
+</DocsPage>;
+```
+
+The title defaults to the `.TH` command name and manual section. `document`
+exposes metadata, sections, ordered paragraph/code blocks, and tagged entries.
+Option entries (tags beginning with a hyphen) use the shared native keyboard
+disclosures, including all paragraphs and examples. Other tagged entries use shared
+static rows, including protocols, environment variables, files, and exit codes.
+Import the package stylesheet after the host's Fumadocs styles.
+
+Section and option anchors populate the TOC. Every entry has a unique anchor;
+duplicate names receive numeric suffixes in document order. Fragment navigation
+opens option disclosures on load and hash changes. All content is server-rendered
+and included in structured search data and `getPageText()` Markdown, including
+collapsed descriptions and examples. You can also put `ManPageReference` in an
+existing MDX page; the manpage itself is parsed as data, never compiled as MDX.
+
+Roff input is detected by `.TH`, or selected with `format: 'roff'`. Supported
+`man(7)` requests are `.TH`, `.SH`, `.SS`, `.TP`, `.TQ`, `.IP`, paragraph breaks
+(`.PP`, `.P`, `.LP`, `.sp`, `.br`), font macros (`.B`, `.I`, `.BR`, `.BI`, `.IB`,
+`.IR`, `.RB`, `.RI`, `.SM`, `.SB`), literal examples (`.EX`/`.EE`, `.nf`/`.fi`),
+and URL/email links (`.UR`/`.UE`, `.MT`/`.ME`). Common character/font escapes are
+decoded; terminal layout requests are ignored. This covers the shipped Refquill
+manual and curl-style `.IP` protocols/options. Unknown requests fail with their
+line number; macros, includes, conditionals, tables written using `tbl`, and
+`mdoc(7)` are not evaluated. Render those manuals to text before import.
+
+`format: 'text'` accepts conventional unwrapped terminal text with uppercase
+section headings at column zero, option/protocol/environment/file/exit-code terms
+indented seven spaces, and descriptions indented further. ANSI colors and
+overstrike formatting are removed. Indented `curl`, `refquill`, or `$` command
+examples are kept as code. Terminal layout varies: prefer the original roff source
+for reliable structure and code preservation. Arbitrary plain prose is not a
+manpage format. Inputs exceeding 2,000,000 characters or 50,000 lines are rejected.
+
+Manpage text is escaped before safe Markdown rendering, and roff links and
+`sourceUrl` are validated. `sourceUrl` must be HTTP(S). `renderLink(anchorProps)`
+uses the shared host link contract; `renderCode(text, 'text')` replaces literal
+example blocks and owns their styling/copy behavior. `ManPageOptions` is exported
+separately for hosts rendering the parsed option entries in their own page layout.
+
+The [CLI manual](/docs/0.x/manpage) renders Refquill's packaged manpage with this adapter.

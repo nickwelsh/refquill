@@ -1,0 +1,133 @@
+---
+title: Shared reference documents
+description: Author portable reference pages, sections, definitions, and highlights.
+icon: book
+---
+
+The rendering contract is `ReferenceDocument` (`schemaVersion: 1`), separate from
+the schema-v1 analyzer document. `createReference` validates this contract,
+assigns routes, and supplies navigation, TOC, search, and Markdown from the same
+content tree. Hidden disclosure bodies remain in search and exports.
+
+- A `directory` owns child directories/pages and can have its own documentation.
+- A `page` owns a title, optional type label, description, badges, definition, and blocks.
+- Blocks are recursive `section`, `entry`, `markdown`, or `code` values.
+- An entry uses `display: 'static'` for visible content or `'disclosure'` for a native
+  expandable row. Sections have arbitrary titles and can mix every block type.
+
+Type keys select icons and customization; type labels supply display text.
+Neither controls whether content expands. Plain string entry titles stay plain;
+`{ code, language, links? }` titles request syntax highlighting. Unsupported
+languages render as escaped text. Definition and label links use zero-based,
+end-exclusive UTF-16 offsets into their exact code strings, with either `targetId`
+or a safe `url` destination.
+
+This complete example can be authored in TypeScript or serialized as JSON:
+
+```tsx
+import { loader } from 'fumadocs-core/source';
+import { DocsBody, DocsPage } from 'fumadocs-ui/page';
+import { createReference, type ReferenceDocument } from '@nickwelsh/refquill-fumadocs';
+import { ReferencePage } from '@nickwelsh/refquill-fumadocs/components';
+import '@nickwelsh/refquill-fumadocs/style.css';
+
+const document = {
+    schemaVersion: 1,
+    title: 'SDK reference',
+    children: [
+        {
+            kind: 'directory',
+            id: 'sdk',
+            title: 'SDK',
+            type: { key: 'module', label: 'Module' },
+            blocks: [],
+            children: [
+                {
+                    kind: 'page',
+                    id: 'send',
+                    title: 'send',
+                    type: { key: 'function', label: 'Function' },
+                    description: 'Send a request.',
+                    definition: {
+                        id: 'send-definition',
+                        language: 'typescript',
+                        code: 'send(url: string): Response;',
+                    },
+                    blocks: [
+                        {
+                            kind: 'section',
+                            id: 'send-parameters',
+                            title: 'Parameters',
+                            blocks: [
+                                {
+                                    kind: 'entry',
+                                    id: 'send-url',
+                                    type: { key: 'parameter', label: 'Parameter' },
+                                    title: { code: 'url: string', language: 'typescript' },
+                                    description: 'The destination URL.',
+                                    display: 'static',
+                                    badges: [{ label: 'required', visibility: 'both' }],
+                                    highlights: [
+                                        {
+                                            definitionId: 'send-definition',
+                                            range: { start: { line: 1, column: 6 }, end: { line: 1, column: 9 } },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+    ],
+} satisfies ReferenceDocument;
+
+const reference = createReference({ input: document, baseUrl: '/reference' });
+const source = loader({ baseUrl: reference.baseUrl, source: reference.toFumadocsSource() });
+// In your route, resolve page through source.getPage(params.slug).
+// page.data.nodeId identifies the selected document node.
+<DocsPage full toc={page.data.toc}>
+    <DocsBody>
+        <ReferencePage page={reference.getNode(page.data.nodeId)} document={reference.document} />
+    </DocsBody>
+</DocsPage>;
+```
+
+IDs are stable document identities and must be globally unique, including code
+and section IDs. Entries/sections may specify a separate `anchor` to retain a
+legacy page-local fragment. `reference.getUrl(id)` resolves a target;
+`reference.getPageText(id)` exports a page. Routes are generated from titles unless
+nodes supply explicit URLs beneath `baseUrl`. An explicit node URL equal to
+`baseUrl` supplies the landing page; otherwise a root directory page is synthesized.
+Directories with empty `blocks` show a child listing. Nonempty directory blocks
+supply the landing content instead; the children still form navigation.
+
+Highlight positions use **one-based lines and UTF-16 columns**. With columns, the
+end is exclusive: columns 6 through 9 select `url` in the example. Omit both columns
+for an inclusive whole-line range. A range always targets the exact displayed
+`definitionId`, independently of original source-file coordinates. Ranges can
+span lines and overlap; nested entries inherit their nearest owning entry's ranges
+unless they supply their own. Code keeps its exact source text when highlighting.
+Rendering rejects more than one million range ownership references or line
+assignments per definition, including inherited ranges, to bound expansion work.
+
+Badges accept arbitrary `type` keys and `visibility: 'open' | 'closed' | 'both'`
+(default `both`). Visibility follows the entry carrying the badge, independently
+of ancestor disclosures. Static entries show `open` and `both` badges. Page badges
+have no disclosure state. `defaultOpen` chooses an entry's initial disclosure state.
+
+`createApiReference`, `createJsonSchemaReference`, and `createManPageReference` all
+expose `toReferenceDocument()`. Their existing wrappers render the same primitives.
+The wrappers accept the shared `components` map alongside their existing hooks.
+To work directly with one shared source/page interface, pass an adapter projection
+to `createReference` using the adapter's `baseUrl`, then render `ReferencePage`:
+
+```ts
+const shared = createReference({
+    input: apiReference.toReferenceDocument(),
+    baseUrl: apiReference.baseUrl,
+});
+```
+
+For component overrides and rendering callbacks, see [customization](./customization.mdx).

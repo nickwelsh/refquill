@@ -1,0 +1,42 @@
+{
+  "name": "@nickwelsh/refquill",
+  "version": "0.1.0",
+  "description": "One CLI for PHP, TypeScript, and Rust API references",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "bin": {
+    "refquill": "./bin/refquill.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "man",
+    "native"
+  ],
+  "exports": {
+    "./manpage": "./man/refquill.1"
+  },
+  "dependencies": {
+    "@nickwelsh/refquill-schema": "workspace:*",
+    "svelte": "5.57.2",
+    "svelte2tsx": "0.7.61",
+    "typedoc": "0.28.20",
+    "typescript": "6.0.3",
+    "vue-component-meta": "3.3.13"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickwelsh/refquill.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://docs.nickwelsh.me/refquill/",
+  "bugs": {
+    "url": "https://github.com/nickwelsh/refquill/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

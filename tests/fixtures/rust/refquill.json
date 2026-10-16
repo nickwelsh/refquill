@@ -1,0 +1,6 @@
+{
+  "title": "Rust fixture",
+  "sourceRoot": "../../..",
+  "output": "../../output/rust.json",
+  "inputs": [{"language": "rust", "name": "rust", "rustdoc": "rustdoc.json"}]
+}

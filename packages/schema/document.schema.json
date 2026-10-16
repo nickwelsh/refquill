@@ -1,0 +1,703 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Document",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 1,
+      "maximum": 1
+    },
+    "generator": {
+      "$ref": "#/$defs/Generator"
+    },
+    "title": {
+      "type": "string"
+    },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DocumentInput"
+      }
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SharedType"
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CompactSymbol"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CompactDiagnostic"
+      }
+    },
+    "rustdoc": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RustdocCrate"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generator",
+    "title",
+    "fingerprint",
+    "inputs",
+    "types",
+    "symbols"
+  ],
+  "$defs": {
+    "Generator": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^refquill$"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "DocumentInput": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "language": {
+          "$ref": "#/$defs/Language"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "language"
+      ]
+    },
+    "Language": {
+      "type": "string",
+      "enum": [
+        "php",
+        "typescript",
+        "rust"
+      ]
+    },
+    "SharedType": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactReference"
+          }
+        },
+        "structure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SharedTypeStructure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ]
+    },
+    "CompactReference": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "targetId": {
+          "description": "Index into symbols. Omitted/null: unresolved external declaration.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "package": {
+          "description": "Compiler-identified origin for an external reference.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "qualifiedName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "SharedTypeStructure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "union"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SharedType"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "types"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "intersection"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SharedType"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "types"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "generic"
+            },
+            "name": {
+              "type": "string"
+            },
+            "arguments": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SharedType"
+              }
+            },
+            "argumentParameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TypeArgumentParameter"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "arguments"
+          ]
+        }
+      ]
+    },
+    "TypeArgumentParameter": {
+      "description": "Formal parameter names and documentation from the generic declaration.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "CompactSymbol": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/Kind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "qualifiedName": {
+          "description": "Omitted: derive from parent/name, or PHP group/name for roots.",
+          "type": "string"
+        },
+        "group": {
+          "description": "Omitted: inherit parent group; roots default to an empty group.",
+          "type": "string"
+        },
+        "parentId": {
+          "description": "Index into symbols. Omitted/null: no parent. Zero is a valid index.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "declaration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "deprecated": {
+          "type": "boolean"
+        },
+        "promoted": {
+          "description": "PHP property declared by constructor parameter promotion. Omitted: false.",
+          "type": "boolean"
+        },
+        "modifiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompactSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "description": "Index into types. Omitted/null: no type.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactSignature"
+          }
+        },
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactTypeParameter"
+          }
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactRelation"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactTag"
+          }
+        },
+        "rustdocId": {
+          "description": "Item key in this input's preserved rustdoc index.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "framework": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompactFrameworkMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "kind",
+        "name",
+        "declaration"
+      ]
+    },
+    "Kind": {
+      "type": "string",
+      "enum": [
+        "class",
+        "interface",
+        "trait",
+        "enum",
+        "enum-case",
+        "function",
+        "method",
+        "constructor",
+        "property",
+        "constant",
+        "variable",
+        "type-alias",
+        "namespace",
+        "module",
+        "accessor",
+        "struct",
+        "union",
+        "impl",
+        "macro",
+        "primitive",
+        "extern-type",
+        "reexport",
+        "trait-alias"
+      ]
+    },
+    "CompactSource": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Omitted: inherit the parent's source file. Diagnostics and roots require a file.",
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1
+        },
+        "endLine": {
+          "description": "Omitted: equal to line.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "line"
+      ]
+    },
+    "CompactSignature": {
+      "type": "object",
+      "properties": {
+        "declaration": {
+          "description": "Omitted: inherit the owning symbol's declaration. Explicit empty string overrides it.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Omitted: inherit the owning symbol's description.",
+          "type": "string"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        },
+        "returns": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "returnsDescription": {
+          "type": "string"
+        },
+        "typeParameters": {
+          "description": "Omitted: inherit owner templates. An explicit empty list overrides them.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactTypeParameter"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CompactParameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "description": {
+          "type": "string"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "variadic": {
+          "type": "boolean"
+        },
+        "byReference": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "properties": {
+          "description": "Compiler-provided object properties. Omitted when the shape is unavailable.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        },
+        "signatures": {
+          "description": "Callback call signatures. Missing signature fields default to empty values.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactSignature"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "CompactTypeParameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "constraint": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "default": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "CompactRelation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/RelationKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "targetId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name"
+      ]
+    },
+    "RelationKind": {
+      "type": "string",
+      "enum": [
+        "extends",
+        "implements",
+        "uses",
+        "inherited-from",
+        "overrides",
+        "reexports"
+      ]
+    },
+    "CompactTag": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ]
+    },
+    "CompactFrameworkMetadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/Framework"
+        },
+        "role": {
+          "$ref": "#/$defs/FrameworkRole"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        },
+        "slots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        },
+        "exposed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactParameter"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "role"
+      ]
+    },
+    "Framework": {
+      "type": "string",
+      "enum": [
+        "react",
+        "vue",
+        "svelte",
+        "solid"
+      ]
+    },
+    "FrameworkRole": {
+      "type": "string",
+      "enum": [
+        "component",
+        "hook"
+      ]
+    },
+    "CompactDiagnostic": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompactSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "message"
+      ]
+    },
+    "RustdocCrate": {
+      "type": "object",
+      "properties": {
+        "api": {
+          "description": "The configured Rust input name.",
+          "type": "string"
+        },
+        "data": {
+          "description": "Original rustdoc JSON, with portable source paths and excluded items removed.\nIts format_version identifies the upstream unstable rustdoc format.",
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "api",
+        "data"
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+---
+title: JSON schemas
+description: Browse Refquill's configuration, semantic document, and presentation contracts.
+icon: data-table
+---
+
+Refquill ships four JSON schemas in `@nickwelsh/refquill-schema`. Each uses JSON Schema 2020-12 and describes a different part of the configuration, analysis, or rendering contract.
+
+Download the v1 schemas directly for editor integration: [configuration](https://docs.nickwelsh.me/refquill/schema/config-v1.json), [compact document](https://docs.nickwelsh.me/refquill/schema/document-v1.json), [resolved document](https://docs.nickwelsh.me/refquill/schema/resolved-v1.json), and [reference document](https://docs.nickwelsh.me/refquill/schema/reference-v1.json).
+
+<Cards>
+    <Card title="Configuration schema" href="/docs/0.x/schemas/config">
+        The fields in refquill.json, including language inputs, source selection, and output settings.
+    </Card>
+    <Card title="Document schema" href="/docs/0.x/schemas/document">
+        The compact schema-v1 document that the CLI writes, with shared input and type tables.
+    </Card>
+    <Card title="Resolved document schema" href="/docs/0.x/schemas/resolved">
+        The complete model returned by resolveDocument, with expanded defaults and public reference IDs.
+    </Card>
+    <Card title="Reference document schema" href="/docs/0.x/schemas/reference">
+        The shared presentation model for directories, pages, recursive sections, entries, badges, links, and code
+        ranges.
+    </Card>
+</Cards>
+
+## Choose a schema
+
+Use `config.schema.json` for editor completion and configuration shape checks. The package exports it as `@nickwelsh/refquill-schema/config.json`. The [configuration guide](../configuration.mdx) covers path resolution and checks that go beyond JSON Schema.
+
+Use `document.schema.json` to describe the JSON artifact written by `refquill generate`. The package exports it as `@nickwelsh/refquill-schema/document.json`. `parseDocument` validates that compact format and checks its graph. `refquill validate` also verifies its fingerprint.
+
+Use `resolved.schema.json` when working with the value returned by `resolveDocument`. It describes complete symbol records after the resolver expands table indexes, defaults, and inherited fields. It is a separate frontend model, not another CLI output format. The package ships the file but does not expose a `resolved.json` import path. Its TypeScript model is the exported `ResolvedDocument` type.
+
+The [document format guide](../schema.mdx) explains how the compact and resolved models differ.
+
+Use `reference.schema.json` when producing or consuming a `ReferenceDocument`. The package exports it as `@nickwelsh/refquill-schema/reference.json`. `parseReferenceDocument` validates its schema, identities, links, and code ranges. Its schema version is 1, separate from the semantic document's schema version 1.
+
+## Read the reference pages
+
+Each page reads the checked-in schema directly through Refquill's JSON Schema renderer. Expand a property or definition to inspect its constraints. Local `$ref` links open the matching definition. The source panel keeps the complete schema, and the page's Markdown export includes the same JSON.
+
+The renderer documents schema keywords. It does not validate your configuration or document. Use Refquill's CLI or schema helpers for runtime checks.
+
+## Update the schemas
+
+Change the owning Rust model and regenerate the files from the repository root:
+
+```sh
+pnpm schema
+pnpm schema:check
+pnpm docs:build
+```
+
+The first three schemas are generated from the Rust models. The presentation contract is maintained in `packages/schema/reference.schema.json`, `reference.d.ts`, and `reference.js`. The site imports all four schema files directly, so the reference pages follow schema changes without a second copy or generated MDX.

@@ -1,0 +1,80 @@
+---
+title: Configuration
+description: Select inputs, source roots, exclusions, and output behavior.
+icon: settings
+---
+
+Refquill reads `refquill.json` by default. Pass another path as the argument to `generate`.
+
+The [configuration schema reference](/docs/0.x/schemas/config) lists the fields, defaults, and language-specific input shapes directly from `config.schema.json`.
+
+```json title="refquill.json"
+{
+    "$schema": "./node_modules/@nickwelsh/refquill-schema/config.schema.json",
+    "title": "Acme API reference",
+    "output": "docs/api.generated.json",
+    "sourceRoot": ".",
+    "includeProtected": false,
+    "inputs": [
+        {
+            "language": "php",
+            "name": "backend",
+            "paths": ["src"]
+        },
+        {
+            "language": "typescript",
+            "name": "frontend",
+            "tsconfig": "tsconfig.json",
+            "entryPoints": ["resources/js/index.ts"]
+        }
+    ]
+}
+```
+
+## Shared options
+
+| Option             | Default         | Meaning                                                                          |
+| ------------------ | --------------- | -------------------------------------------------------------------------------- |
+| `$schema`          | None            | An editor hint. It does not change generation.                                   |
+| `title`            | `API reference` | The generated document's title.                                                  |
+| `output`           | Required        | A path ending in `.json`.                                                        |
+| `sourceRoot`       | `.`             | The root for portable source paths. It must contain the selected sources.        |
+| `includeProtected` | `false`         | Include protected PHP and TypeScript members. This setting does not affect Rust. |
+| `exclude`          | See below       | Glob patterns relative to `sourceRoot`. An explicit array replaces the defaults. |
+| `inputs`           | Required        | At least one named language input.                                               |
+
+All filesystem paths resolve relative to the configuration file. `sourceRoot` must exist and be a directory. Unknown configuration fields fail validation.
+
+The default exclusions are:
+
+```json
+["**/vendor/**", "**/node_modules/**", "**/.git/**", "**/target/**"]
+```
+
+When adding exclusions, repeat any defaults you want to keep. For example:
+
+```json
+{
+    "exclude": ["**/vendor/**", "**/node_modules/**", "**/.git/**", "**/target/**", "**/tests/**"]
+}
+```
+
+This fragment belongs in the full configuration, alongside `output` and `inputs`.
+
+## Inputs
+
+Each name must be unique across the configuration and contain only ASCII letters, digits, hyphens, or underscores. A name identifies a group in the document and contributes to symbol IDs and frontend routes. Keep it stable when changing source selection.
+
+A PHP input requires `language`, `name`, and a nonempty `paths` array. Paths can select files or directories. Directory selection walks PHP files recursively.
+
+A TypeScript input requires `language`, `name`, `tsconfig`, and a nonempty `entryPoints` array. Select the public module entry points. They can be files or directories. Refquill uses the tsconfig for compiler options and dependency resolution.
+
+A Rust input requires `language`, `name`, and exactly one of `rustdoc` or `manifestPath`. `rustdoc` imports an existing compiler-generated JSON file. `manifestPath` invokes Cargo for one library or proc-macro crate. Optional Cargo settings are `package`, `toolchain`, `features`, `allFeatures`, and `noDefaultFeatures`. They require `manifestPath`. See [Rust analysis](./rust.mdx) for both configurations.
+
+Every input must produce public declarations. An empty input fails generation. Sources must stay inside `sourceRoot`; the output cannot overwrite the configuration, a selected source, or the tsconfig.
+
+## Output ownership
+
+Refquill replaces an existing output only when it is an intact Refquill document. `generate --force` permits replacement of an edited or unmanaged regular file. It never permits a symlink output.
+
+A sidecar `.json.lock` prevents concurrent writers. Generation writes a temporary file in the destination directory and then renames it atomically. Do not remove a lock until you confirm the writer has stopped.

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "generator": { "name": "refquill", "version": "0.1.0" },
+  "title": "Pointer and inheritance fixture",
+  "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+  "inputs": [{ "name": "backend", "language": "php" }],
+  "types": [
+    { "text": "A", "references": [{ "name": "A", "targetId": 0 }] },
+    { "text": "A", "references": [{ "name": "A", "targetId": 2 }] },
+    { "text": "string" }
+  ],
+  "symbols": [
+    {
+      "id": "class:A", "input": 0, "kind": "class", "name": "A",
+      "group": "Example", "declaration": "class A", "description": "Owner",
+      "source": { "file": "src/A.php", "line": 1, "endLine": 30 }
+    },
+    {
+      "id": "method:A::greet", "input": 0, "parentId": 0,
+      "kind": "method", "name": "greet", "declaration": "function greet()",
+      "description": "Method", "source": { "line": 5 }, "type": 0,
+      "typeParameters": [{ "name": "T", "constraint": 0, "default": 2 }],
+      "signatures": [
+        { "returns": 0 },
+        {
+          "declaration": "", "description": "", "typeParameters": [], "returns": 1,
+          "parameters": [{ "name": "value", "type": 0, "default": "", "optional": true, "variadic": true, "byReference": true }]
+        }
+      ],
+      "relations": [{ "kind": "overrides", "name": "B", "targetId": 2 }],
+      "tags": [{ "name": "custom" }]
+    },
+    { "id": "class:B", "input": 0, "kind": "class", "name": "B", "declaration": "class B" },
+    {
+      "id": "property:A::value", "input": 0, "parentId": 0,
+      "kind": "property", "name": "value", "group": "", "qualifiedName": "SpecialName",
+      "declaration": "public $value", "source": { "file": "src/Other.php", "line": 4 },
+      "type": 2
+    }
+  ],
+  "diagnostics": [{ "message": "Retained", "source": { "file": "src/A.php", "line": 2 } }]
+}

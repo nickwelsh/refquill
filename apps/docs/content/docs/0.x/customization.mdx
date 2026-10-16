@@ -1,0 +1,206 @@
+---
+title: Customize API pages
+description: Connect external references and replace rendering with your site components.
+icon: paint-brush
+---
+
+The shared `ReferencePage` renderer accepts headers, badges, links, code renderers, and component overrides. API references, JSON Schema docs, and manpages use the same recursive sections and entries. Content and terminology come from the `ReferenceDocument`, rather than language-specific rendering branches.
+
+## External links
+
+`resolveExternal` runs when Refquill cannot find an internal symbol. Return a URL or `null`.
+
+```ts
+const reference = createApiReference({
+    input,
+    resolveExternal(name, { language }) {
+        if (language === 'php' && name === 'DateTimeImmutable') {
+            return 'https://www.php.net/manual/en/class.datetimeimmutable.php';
+        }
+        return null;
+    },
+});
+```
+
+The adapter permits HTTP and HTTPS URLs, local absolute paths, and fragments. It rejects unsafe destinations. Ambiguous internal names do not receive guessed targets.
+
+## Headers and badges
+
+`renderHeader` receives the presentation page, title, rendered Markdown description, source URL, and rendered badges. A non-nullish return value replaces the header and owns the page description. Nested descriptions and sections remain in the body. A `components.Header` override takes precedence over `renderHeader`. Returning `null` or `undefined` from a render callback retains the default output.
+
+The `ApiReference` wrapper additionally supplies `reference`, `symbol`, and `namespace` to its header callback; absent symbol and namespace values are `null`. A custom header owns the root or matching signature description. Distinct overload summaries and member, parameter, and return documentation remain in the body. Header content can stay on the server.
+
+`renderBadge` receives the badge label, custom type, category, and visibility. A badge can appear when an entry is `open`, `closed`, or `both`. Static entries show open and both badges. The renderer owns that visibility, so custom badge components only need to render the badge. Categories are derived from `badge.type`, with `modifier` as the fallback. Kind, modifier, and deprecation badges use the `kind`, `modifier`, and `deprecated` categories.
+
+## Links and previews
+
+`renderLink` receives anchor props for Markdown, type references, relationships, listings, and default declarations. Use it to add a host router link or preview card.
+
+Preserve the supplied attributes and children. Code links retain the complete source text and their original character offsets. Custom header and code renderers own their markup and should use the same link component. Preserve hidden qualified prefixes used when copying code. Returning `null` or `undefined` keeps the default anchor. Relationship labels use the target's short name and retain the qualified name in the title.
+
+## Code rendering
+
+The default renderer uses Shiki and Fumadocs code blocks. A custom `renderCode` receives the exact definition, explicit link ranges, and inherited highlight ranges:
+
+```tsx
+import { referenceHighlightTransformer, referenceLinkTransformer } from '@nickwelsh/refquill-fumadocs';
+
+<ReferencePage
+    page={page}
+    document={reference.document}
+    renderCode={(code, language, { definition, highlights }) =>
+        renderSiteCode(code, language, [
+            referenceLinkTransformer(
+                code,
+                definition.links,
+                new Map(
+                    definition.links?.flatMap((link) =>
+                        link.targetId ? [[link.targetId, reference.getUrl(link.targetId)]] : [],
+                    ),
+                ),
+            ),
+            referenceHighlightTransformer(definition.id, highlights),
+        ])
+    }
+/>;
+```
+
+`renderSiteCode` is your site's highlighter. Apply the supplied Shiki transformers to preserve links and range ownership. Ranges use one-based lines and UTF-16 columns with an exclusive end. Omitting columns selects complete lines. Child entries inherit the nearest owning entry's ranges unless they supply their own.
+
+`memberLines` remains available for renderers that only support whole lines. Use `referenceHighlightTransformer` to retain column precision. A custom renderer owns syntax styling and copy behavior.
+
+### ApiReference code callbacks
+
+Here `api` is the `createApiReference` result from the integration guide. Existing two-argument API callbacks still work. The third argument retains
+`symbol` and `memberLines` and adds `definition` and `highlights`. Import
+`referenceHighlightTransformer` from `@nickwelsh/refquill-fumadocs` to preserve
+column ranges in a custom Shiki pipeline:
+
+```tsx
+import { referenceHighlightTransformer, transformerApiReference } from '@nickwelsh/refquill-fumadocs';
+import type { ApiReferenceProps } from '@nickwelsh/refquill-fumadocs/components';
+
+// Pass this callback to ApiReference. renderSiteCode is your host renderer;
+// it should apply the supplied Shiki options and preserve its HAST attributes.
+const renderCode: NonNullable<ApiReferenceProps['renderCode']> = (
+    code,
+    language,
+    { memberLines, symbol, definition, highlights },
+) => {
+    return renderSiteCode(code, language, {
+        meta: { __raw: 'api' },
+        transformers: [
+            transformerApiReference(api.resolveLink, {
+                inputName: symbol.api,
+                group: symbol.group,
+            }),
+            referenceHighlightTransformer(definition.id, highlights),
+        ],
+        memberLines,
+    });
+};
+```
+
+The callback receives the complete qualified source. A custom renderer owns its
+syntax styling, copy behavior, and range attributes. A renderer supporting only
+whole lines can attach `data-reference-declaration={memberLines[N]}` to line N;
+values can contain several whitespace-separated owners, such as a constructor
+parameter and its promoted property. Omitting the callback retains
+the package's linked Fumadocs code block and hover/focus behavior.
+
+## Sections and entries
+
+The component exports are `ReferencePage`, `ReferenceDirectory`, `ReferenceSection`,
+`ReferenceEntry`, `ReferenceDefinition`, and `ReferenceBadge`. `ReferenceDirectory`
+is the page renderer with a `directory` prop. Lower-level primitives accept their
+content through `section`, `entry`, or `definition` props. Use a complete page to
+supply cross-page links, inherited ranges, and disclosure interactions.
+
+`ReferencePage` accepts `renderHeader`, `renderBadge`, `renderLink`, `renderCode`,
+`icons`, and a `components` map with `Header`, `Section`, `Entry`, and `Definition`.
+Pass the provided props through when wrapping a default component so descendants
+retain the same customizations and range context:
+
+```tsx
+import { ReferenceEntry, ReferencePage, type ReferenceEntryProps } from '@nickwelsh/refquill-fumadocs/components';
+
+function SiteEntry(props: ReferenceEntryProps) {
+    return (
+        <div className="site-reference-entry">
+            <ReferenceEntry {...props} />
+        </div>
+    );
+}
+
+<ReferencePage
+    page={reference.getNode(page.data.nodeId)}
+    document={reference.document}
+    components={{ Entry: SiteEntry }}
+    renderBadge={(badge) => <span className="site-badge">{badge.label}</span>}
+    renderLink={(props) => <a {...props} className={`site-link ${props.className ?? ''}`} />}
+/>;
+```
+
+A `components.Header` receives `{ page, title, description, badges, sourceUrl }`.
+The callback `renderHeader` receives the same props; a component override takes
+precedence. `renderBadge` receives the badge fields and `category` (derived from
+`badge.type`, default `modifier`). Badge visibility remains controlled by the shared
+wrapper around custom badge output. `icons[type.key]` selects a host SVG component;
+`icons['chevron-right']` replaces the disclosure icon. Unknown types retain a
+fallback icon and their own label.
+
+A shared `renderCode(code, language, { definition, highlights, memberLines })`
+callback owns syntax styling, copying, and interaction metadata. Use
+`referenceHighlightTransformer(definition.id, highlights)` in a custom Shiki
+pipeline to retain exact row/column emphasis. `memberLines` is a coarser map for
+renderers that only support whole-line emphasis. Returning null or undefined from
+a render callback retains the default output. Data and host callbacks stay on the
+server; only rendered children cross the small client interaction boundary.
+
+## Icons and layout
+
+Pass a partial `icons` map keyed by presentation types to replace kind icons or `chevron-right`. Missing icons use the default Lucide components. Give the same map to `apiReferenceIcon` in your loader so the sidebar matches the page. `defaultApiReferenceIcons` exports every default, and `ApiReferenceIcons` types the override map. Override components receive normal SVG props, including class names and accessibility attributes. The host owns its icon-library dependency.
+
+React components and hooks use the `react-component` and `react-hook` keys.
+This site uses `unplugin-icons` with `@iconify-json/carbon` to override both
+with Carbon's `logo-react`:
+
+```ts title="src/lib/api-reference-icons.ts"
+import type { ApiReferenceIcons } from '@nickwelsh/refquill-fumadocs/components';
+import ReactLogo from '~icons/carbon/logo-react';
+
+export const icons = {
+    'react-component': ReactLogo,
+    'react-hook': ReactLogo,
+} satisfies ApiReferenceIcons;
+```
+
+The `~icons` import requires your bundler's `unplugin-icons` integration and
+the Carbon collection. Share the map between your source loader and renderer:
+
+```ts title="src/lib/api.ts"
+import { loader } from 'fumadocs-core/source';
+import { apiReferenceIcon } from '@nickwelsh/refquill-fumadocs/components';
+import { icons } from './api-reference-icons';
+
+// Use the reference created in the Fumadocs integration guide.
+export const source = loader({
+    baseUrl: reference.baseUrl,
+    source: reference.toFumadocsSource(),
+    icon: (name) => apiReferenceIcon(name, icons),
+});
+```
+
+```tsx title="src/components/reference-page.tsx"
+import { ReferencePage } from '@nickwelsh/refquill-fumadocs/components';
+import { icons } from '../lib/api-reference-icons';
+
+<ReferencePage page={reference.getNode(page.data.nodeId)} document={reference.document} icons={icons} />;
+```
+
+These keys select presentation icons; the analyzer still records the original
+TypeScript kind, such as `function`, `class`, or `variable`.
+
+The stylesheet inherits Fumadocs theme variables. Set `--refquill-sticky-top` to account for your header height. Its default is `6rem`.
+
+This site's [source on GitHub](https://github.com/nickwelsh/refquill/tree/main/apps/docs/src/components/docs) contains a complete integration with custom headers, badges, Carbon icons, syntax rendering, and link previews.

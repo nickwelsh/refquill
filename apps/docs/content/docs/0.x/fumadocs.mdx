@@ -1,0 +1,136 @@
+---
+title: Fumadocs integration
+description: Render generated JSON with Fumadocs 16 and React 19.
+icon: book
+---
+
+The adapter turns a generated document into virtual pages. It supplies namespace indexes, declaration pages, member anchors, navigation metadata, a table of contents, and structured search data.
+
+[Install the frontend package](./installation.mdx) before using these examples. Use your framework's existing Fumadocs setup with Fumadocs 16 and React 19.
+
+## Create the source
+
+```ts title="src/lib/api.ts"
+import { loader } from 'fumadocs-core/source';
+import { createApiReference, createReference } from '@nickwelsh/refquill-fumadocs';
+import { apiReferenceIcon } from '@nickwelsh/refquill-fumadocs/components';
+import input from './api.generated.json';
+
+export const api = createApiReference({
+    input,
+    baseUrl: '/api',
+    sourceUrl: ({ file, line }) =>
+        `https://github.com/nickwelsh/refquill/blob/main/${file.split('/').map(encodeURIComponent).join('/')}#L${line}`,
+});
+
+export const reference = createReference({
+    input: api.toReferenceDocument(),
+    baseUrl: api.baseUrl,
+});
+
+export const source = loader({
+    baseUrl: reference.baseUrl,
+    source: reference.toFumadocsSource(),
+    icon: apiReferenceIcon,
+});
+```
+
+`createApiReference` validates the analyzer output and exposes its semantic model. `toReferenceDocument()` projects those facts into the shared presentation schema. `createReference` validates the presentation document and builds its routes, navigation, TOCs, search data, and Markdown exports. Keep it in the build/server layer when your framework supports server components. Pass `source.pageTree` to your Fumadocs layout.
+
+## Render a page
+
+Look up `page` with the route's slugs through `source.getPage`. Return your framework's 404 response if no page matches. Then render:
+
+```tsx title="src/components/reference-page.tsx"
+import { DocsBody, DocsPage } from 'fumadocs-ui/page';
+import { ReferencePage } from '@nickwelsh/refquill-fumadocs/components';
+import '@nickwelsh/refquill-fumadocs/style.css';
+
+// `page` is the result of source.getPage(slugs).
+// `reference` is the object created in the source module.
+<DocsPage full toc={page.data.toc} tableOfContent={{ enabled: false }}>
+    <DocsBody>
+        <ReferencePage page={reference.getNode(page.data.nodeId)} document={reference.document} />
+    </DocsBody>
+</DocsPage>;
+```
+
+`ReferencePage` renders its own heading and badges. Its `ReferenceSection`, `ReferenceEntry`, and `ReferenceDefinition` components handle recursive content across API docs, JSON Schema docs, and manpages. Adding `DocsTitle` would repeat the title. Use the full content width for the definition panel. Wide containers show a sticky declaration beside the docs. Narrow containers show definitions inline.
+
+## Routes and namespaces
+
+Every input and namespace segment has a landing page. Declaration routes preserve the case of input, namespace, and symbol names. Name collisions receive deterministic kind and numeric suffixes. Member links point to anchors on the owning declaration page.
+
+`api.getUrl(symbolId)` returns a symbol's canonical URL. `reference.getUrl(nodeId)` resolves a presentation node, section, entry, or definition. `api.getNamespace(inputName, name)` returns immediate child namespaces and declarations. `api.getNamespaceUrl(inputName, name)` returns the namespace URL.
+
+Rust modules share their namespace index pages, and the input landing page represents the crate module without repeating its name in the route. Types group inherent, trait, auto trait, and blanket implementations inline; `api.getImplementationGroups(id)` exposes those groups to custom renderers.
+
+Names such as `index` and `meta` remain routable. Collision allocation is independent of input order and reserves natural declaration names before choosing suffixes. Namespace folders link to their landing page without repeating it as a sidebar child.
+
+Keep generated JSON separate from authored MDX. If you combine sources under one base URL, reserve separate authored and generated routes.
+
+## Layout and interaction
+
+Badges above the page name show kind, declared modifiers, and deprecation. Member
+visibility defaults to public when the semantic model contains no explicit
+visibility modifier. Member disclosures retain compact names/types while collapsed
+and expose descriptions, parameter/default/return docs, templates, and tags when
+expanded. Inline TypeScript shapes retain field ownership in the outline.
+
+Wide containers use a sticky definition panel beside the docs. On narrow containers,
+the panel disappears and each declaration is available inline. Hovering or focusing
+a docs row highlights its owned declaration. Nested rows fall back to the owning
+member when no more specific syntax range is available. Code scrolling is confined
+to the definition viewport, never the page. The small client boundary receives
+rendered children; the document and resolver functions can remain on the server.
+
+The stylesheet inherits Fumadocs theme variables. It supports light/dark syntax
+themes, visible keyboard focus, and horizontally scrollable code without forcing
+the entire page to scroll. Set `--refquill-sticky-top` on your layout to account for
+a different header height; its default is `6rem`.
+
+## Linked definitions
+
+The analyzers qualify PHP native/PHPDoc types and documented TypeScript aliases
+using Mago/compiler resolution. Source strings, comments, shape keys, and generic
+variables are not rewritten as class names. API Markdown exports retain qualified
+names and mark definition fences as `php api` or `typescript api`.
+
+The default renderer uses Shiki to shorten known names and link them. Native
+Fumadocs copying includes visually hidden namespace prefixes, so display shortening
+does not remove qualifiers from copied code. When short labels collide in one code
+block, the renderer keeps the names qualified. Unknown names stay unchanged.
+Token scopes protect strings, comments, and TypeScript parameter/property names.
+Lookup uses language, configured input, and source group; ambiguous names are not
+linked by guessing a target.
+
+For generated Markdown rendered through your existing Fumadocs MDX pipeline:
+
+```ts
+import { transformerApiReference } from '@nickwelsh/refquill-fumadocs';
+
+const transformers = [transformerApiReference(api.resolveLink)];
+// Add these to your Shiki/Fumadocs rehype-code configuration.
+```
+
+The transformer only acts on API-marked PHP/TypeScript blocks. Optional input/group
+context can disambiguate multiple entry points:
+`transformerApiReference(api.resolveLink, { inputName: 'backend' })`.
+
+PHP parameter defaults retain resolved qualified names, including enum cases and
+class constants. The React renderer links these expressions through the same
+syntax-aware renderer as inline types; quoted strings remain literal. Links to
+member fragments open the target disclosure (and any containing disclosures) on
+initial load and when the fragment changes, then scroll it into view.
+
+## Search and Markdown
+
+Fumadocs' `createFromSource(source)` can index the virtual pages because they contain structured search data. Hosts can expose a search endpoint or generate a static index for client-side search. This site generates its search index at build time. Use `reference.getPageText(page.data.nodeId)` for a Markdown representation in a text endpoint, generated file, or LLM export.
+
+Markdown rendering skips raw HTML and rejects unsafe link schemes. Exports include all nested entries and collapsed descriptions. The presentation document carries explicit code links and line/column ranges for renderers that need interactive highlighting. The analyzer and presentation contracts each use schema version 1 and are versioned independently.
+
+For callback contracts and styling, see [customization](./customization.mdx). For every exported type and function, browse the [generated API reference](/docs/0.x/api/fumadocs).
+
+## Other reference sources
+
+Use [shared reference documents](./reference-documents.mdx) to author presentation data directly, [JSON Schema](./json-schema.mdx) to document a schema, or [manpages](./manpages.mdx) to render roff or terminal text. All adapters project into the same `ReferenceDocument` and share rendering, search, navigation, and customization.

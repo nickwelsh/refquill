@@ -1,0 +1,523 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.nickwelsh.me/refquill/schema/reference-v1.json",
+  "title": "Refquill reference rendering document",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "title",
+    "children"
+  ],
+  "$defs": {
+    "typeLabel": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ]
+    },
+    "codeLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "targetId"
+          ],
+          "not": {
+            "required": [
+              "url"
+            ]
+          }
+        },
+        {
+          "required": [
+            "url"
+          ],
+          "not": {
+            "required": [
+              "targetId"
+            ]
+          }
+        }
+      ]
+    },
+    "label": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string",
+              "minLength": 1
+            },
+            "contextCode": {
+              "type": "string",
+              "description": "Preceding syntax used only for highlighting a fragment. Not displayed or counted in code link offsets."
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/codeLink"
+              }
+            }
+          },
+          "required": [
+            "code",
+            "language"
+          ]
+        }
+      ]
+    },
+    "badge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "visibility": {
+          "enum": [
+            "open",
+            "closed",
+            "both"
+          ]
+        }
+      },
+      "required": [
+        "label"
+      ]
+    },
+    "definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/codeLink"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "language",
+        "code"
+      ]
+    },
+    "highlight": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "definitionId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "range": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "start": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "column": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "line"
+              ]
+            },
+            "end": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "column": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "required": [
+                "line"
+              ]
+            }
+          },
+          "required": [
+            "start",
+            "end"
+          ]
+        }
+      },
+      "required": [
+        "definitionId",
+        "range"
+      ]
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "section"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "anchor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "title",
+        "blocks"
+      ]
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "entry"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "type": {
+          "$ref": "#/$defs/typeLabel"
+        },
+        "title": {
+          "$ref": "#/$defs/label"
+        },
+        "description": {
+          "type": "string"
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/badge"
+          }
+        },
+        "display": {
+          "enum": [
+            "static",
+            "disclosure"
+          ]
+        },
+        "defaultOpen": {
+          "type": "boolean"
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/highlight"
+          }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "anchor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "title",
+        "display"
+      ]
+    },
+    "markdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "markdown"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    "code": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "code"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition"
+        }
+      },
+      "required": [
+        "kind",
+        "definition"
+      ]
+    },
+    "block": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/section"
+        },
+        {
+          "$ref": "#/$defs/entry"
+        },
+        {
+          "$ref": "#/$defs/markdown"
+        },
+        {
+          "$ref": "#/$defs/code"
+        }
+      ]
+    },
+    "directory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/typeLabel"
+        },
+        "description": {
+          "type": "string"
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/badge"
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/definition"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "directory"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "title",
+        "blocks",
+        "children"
+      ]
+    },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\s\\u0000-\\u001f\\u007f]+$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/typeLabel"
+        },
+        "description": {
+          "type": "string"
+        },
+        "badges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/badge"
+          }
+        },
+        "definition": {
+          "$ref": "#/$defs/definition"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "page"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "title",
+        "blocks"
+      ]
+    },
+    "node": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/directory"
+        },
+        {
+          "$ref": "#/$defs/page"
+        }
+      ]
+    }
+  }
+}

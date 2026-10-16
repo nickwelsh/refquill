@@ -1,0 +1,5 @@
+{
+  "title": "PHP test API reference",
+  "output": "../../output/php.json",
+  "inputs": [{"language": "php", "name": "backend", "paths": ["Api.php"]}]
+}

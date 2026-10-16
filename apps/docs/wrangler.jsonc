@@ -1,0 +1,16 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "refquill-docs",
+    "compatibility_date": "2026-10-15",
+    "workers_dev": false,
+    "preview_urls": false,
+    "routes": [
+        { "pattern": "docs.nickwelsh.me/refquill", "zone_name": "nickwelsh.me" },
+        { "pattern": "docs.nickwelsh.me/refquill/*", "zone_name": "nickwelsh.me" },
+    ],
+    "assets": {
+        "directory": "dist/assets",
+        "html_handling": "auto-trailing-slash",
+        "not_found_handling": "404-page",
+    },
+}
