@@ -31,3 +31,19 @@ test('docs deployment waits for verification and package tests and reuses their 
     assert.equal(docs.jobs.deploy.environment.name, 'cloudflare');
     assert.ok(!docs.jobs.deploy.steps.some((step) => step.run?.includes('docs:build')));
 });
+
+test('the release explicitly passes the required Cloudflare environment secrets', () => {
+    const publish = workflow('publish');
+    const docs = workflow('docs');
+    const names = ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID'];
+    assert.deepEqual(Object.keys(publish.jobs.docs.secrets).sort(), [...names].sort());
+    for (const name of names) {
+        assert.equal(publish.jobs.docs.secrets[name], '${{ secrets.' + name + ' }}');
+        assert.equal(docs.on.workflow_call.secrets[name].required, true);
+    }
+    const deploy = docs.jobs.deploy.steps.find((step) => step.name === 'Deploy the exact verified assets');
+    for (const name of names) {
+        assert.equal(deploy.env[name], '${{ secrets.' + name + ' }}');
+        assert.ok(deploy.run.includes('test -n "$' + name + '"'));
+    }
+});
