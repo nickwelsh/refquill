@@ -47,3 +47,13 @@ test('the release explicitly passes the required Cloudflare environment secrets'
         assert.ok(deploy.run.includes('test -n "$' + name + '"'));
     }
 });
+
+test('manual release retries can preserve existing npm stages while deploying docs', () => {
+    const publish = workflow('publish');
+    assert.equal(publish.on.workflow_dispatch.inputs['stage-npm'].type, 'boolean');
+    assert.equal(publish.on.workflow_dispatch.inputs['stage-npm'].default, true);
+    assert.equal(publish.jobs.stage.if, "github.event_name != 'workflow_dispatch' || inputs.stage-npm");
+    assert.deepEqual(publish.jobs['github-release'].needs, 'stage');
+    assert.deepEqual(publish.jobs.docs.needs, ['verify', 'packages']);
+    assert.ok(!publish.jobs.docs.if);
+});

@@ -3,6 +3,11 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      stage-npm:
+        description: Stage npm packages (disable when this version is already staged)
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -43,6 +48,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
   stage:
     name: Stage verified tarballs on npm
+    if: github.event_name != 'workflow_dispatch' || inputs.stage-npm
     needs: [release, packages]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
