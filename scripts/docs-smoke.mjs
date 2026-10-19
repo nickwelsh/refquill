@@ -86,15 +86,12 @@ try {
     const bare = await read('/refquill', /text\/html/);
     assert.equal(new URL(bare.url).pathname, '/refquill/');
     const home = await readHtml('/refquill/');
-    assert.match(home, /API documentation from your source/);
+    assert.match(home, /Refquill/);
+    assert.match(home, /class="docs-sidebar"/);
     assert.match(home, /href="\/refquill\/docs\/0\.x"/);
-    assert.doesNotMatch(
-        home,
-        /class="[^"]*\b(?:docs-sidebar|mobile-sidebar|mobile-navigation|section-trigger|version-trigger)\b/,
-    );
     assert.doesNotMatch(home, /(?:href|src)="\/(?:docs|assets|RSC|llms)/);
     const asset = home.match(/(?:src|href)="(\/refquill\/assets\/[^" ]+\.js)"/);
-    assert.ok(asset, 'The landing page must reference a deployed JS asset');
+    assert.ok(asset, 'The docs homepage must reference a deployed JS asset');
     assert.ok(asset[1]);
     await read(asset[1], /javascript/);
     await read('/refquill/RSC/R/docs/0.x.txt', /text\/x-component/);
@@ -107,12 +104,15 @@ try {
     const guide = await readHtml('/refquill/docs/0.x');
     assert.match(guide, /class="docs-sidebar"/);
     assert.ok(guide.includes('https://docs.nickwelsh.me/refquill/docs/0.x'));
+    assert.ok(guide.includes(`/blob/${ref}/apps/docs/content/docs/0.x/index.mdx`));
     assert.doesNotMatch(guide, /\/refquill\/refquill\//);
     for (const suffix of ['api', 'schemas/document', 'manpage']) {
         await read(`/refquill/docs/0.x/${suffix}`, /text\/html/);
     }
     const manual = await readHtml('/refquill/docs/0.x/manpage');
     assert.ok(manual.includes(`/blob/${ref}/packages/cli/man/refquill.1`));
+    const schemaReference = await readHtml('/refquill/docs/0.x/schemas/config');
+    assert.ok(schemaReference.includes(`/blob/${ref}/packages/schema/config.schema.json`));
     const index = await (await read('/refquill/llms.txt', /text\/plain/)).text();
     assert.doesNotMatch(index, /\/docs\/main(?:[\s/)#]|$)/);
     const pages = [
@@ -146,15 +146,21 @@ try {
     await read('/refquill/llms-full.txt', /text\/plain/);
     const markdown = await (await read('/refquill/llms.mdx/docs/0.x/content.md', /text\/markdown/)).text();
     assert.match(markdown, /Refquill/);
+    const schemaMarkdown = await (
+        await read('/refquill/llms.mdx/docs/0.x/schemas/config/content.md', /text\/markdown/)
+    ).text();
+    assert.match(schemaMarkdown, /includeProtected/);
+    const manualMarkdown = await (
+        await read('/refquill/llms.mdx/docs/0.x/manpage/content.md', /text\/markdown/)
+    ).text();
+    assert.match(manualMarkdown, /REFQUILL_TYPESCRIPT_WORKER/);
     const searchIndex = await (await read('/refquill/api/search', /application\/json/)).json();
     assert.equal(searchIndex.type, 'advanced');
-    const image = await read('/refquill/og/docs/0.x/image.webp', /image\/webp/);
-    assert.ok((await image.arrayBuffer()).byteLength > 100);
     const removedMain = await fetch(`${origin}/refquill/docs/main`);
     assert.equal(removedMain.status, 404, 'Only the 0.x documentation is published');
     const missing = await fetch(`${origin}/refquill/docs/does-not-exist`);
     assert.equal(missing.status, 404);
-    console.log(`Worker smoke check passed: ${pages.length} pages, assets, search, Markdown, social image, and 404.`);
+    console.log(`Worker smoke check passed: ${pages.length} pages, assets, search, Markdown, schemas, CLI manual, and 404.`);
 } catch (error) {
     console.error(log);
     throw error;

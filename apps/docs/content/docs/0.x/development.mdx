@@ -13,9 +13,9 @@ pnpm install --frozen-lockfile
 pnpm docs:dev
 ```
 
-Open the local URL printed by Waku. `/refquill/` is the landing page, `/refquill/docs/0.x` contains the guides, and `/refquill/docs/0.x/api` contains the generated package reference. The public site updates on each version tag.
+Open the local URL printed by Waku. `/refquill/` opens the latest documentation, `/refquill/docs/0.x` contains the guides, and `/refquill/docs/0.x/api` contains the generated package reference. The public site updates on each version tag.
 
-The site lives in `apps/docs` and uses Waku, Fumadocs, and Intent UI. It includes search, theme control, responsive navigation, link previews, Markdown exports, and Open Graph images.
+The site lives in `apps/docs` and uses [docs-base](https://github.com/nickwelsh/docs-base) for the complete Waku/Fumadocs application, including search, theme control, responsive navigation, reference rendering, and Markdown exports.
 
 ## Generate Refquill's own reference
 
@@ -24,7 +24,7 @@ pnpm docs:generate
 pnpm --filter @refquill/docs api:validate
 ```
 
-The root `refquill.json` selects the Fumadocs package's public `index.ts` and `components.tsx` entry points and the schema package's `index.d.ts`. A third input imports rustdoc JSON for the `refquill` Rust library. It writes `apps/docs/src/generated/api.json` through Refquill's own CLI.
+The root `refquill.json` selects the Fumadocs package's public `index.ts` and `components.tsx` entry points and the schema package's `index.d.ts`. A third input imports rustdoc JSON for the `refquill` Rust library. It writes `apps/docs/generated/api.json` through Refquill's own CLI.
 
 Both `docs:dev` and `docs:build` build the workspace packages and regenerate the reference first. While a dev server is already running, regenerate manually after changing package exports or comments. Commit the artifact with those changes. Do not format its JSON.
 
@@ -36,7 +36,7 @@ Rustdoc retains the compiler target and feature configuration. The native snapsh
 
 ## Edit content
 
-Author MDX in `apps/docs/content/docs/0.x`. `meta.json` controls sidebar order. The API section comes from virtual pages, so it does not need generated MDX files. `src/lib/shared.ts` owns the site name and repository links.
+Author MDX in `apps/docs/content/docs/0.x`. `meta.json` controls sidebar order. The API section comes from virtual pages, so it does not need generated MDX files. `waku.config.ts` owns the site identity, repository, base path, content directory, and generated reference inputs. The schema pages and CLI manual are generated as portable reference JSON by `tooling/generate-references.mjs`; docs-base owns their presentation.
 
 Use sentence case headings and plain descriptions. Explain the command, field, or behavior a reader needs. Keep examples tied to supported syntax and actual package exports.
 
@@ -52,9 +52,9 @@ pnpm docs:deploy:check
 pnpm --filter @refquill/docs start
 ```
 
-The production build uses Waku's static Cloudflare adapter to generate the complete site in `apps/docs/dist`. Guide and API pages, Markdown and LLM exports, Open Graph images, and the search index are produced at build time. Search runs in the browser against the generated index, including version filters. Cloudflare Workers serves the generated assets. `start` previews the output with Wrangler locally, using `apps/docs/wrangler.jsonc`. `docs:smoke` checks the built site over HTTP, and `docs:deploy:check` performs a Wrangler dry run.
+The production build runs `docs-base build` to generate the complete site in `apps/docs/dist/public`, then prepares assets for the Worker's public base path. Guide and reference pages, Markdown and LLM exports, and the search index are produced at build time. Search runs in the browser against the generated index, including version filters. Cloudflare Workers serves the generated assets. `start` previews the output with Wrangler locally, using `apps/docs/wrangler.jsonc`. `docs:smoke` checks the built site over HTTP, and `docs:deploy:check` performs a Wrangler dry run.
 
-The public site is [docs.nickwelsh.me/refquill](https://docs.nickwelsh.me/refquill). Its `/refquill/` base path applies to guides, search, Markdown exports, Open Graph images, and assets. Rebuild and deploy the complete asset output after changing content or package APIs.
+The public site is [docs.nickwelsh.me/refquill](https://docs.nickwelsh.me/refquill). Its `/refquill/` base path applies to guides, search, Markdown exports and assets. Rebuild and deploy the complete asset output after changing content or package APIs.
 
 ## Deploy to Cloudflare
 
@@ -74,7 +74,7 @@ pnpm docs:deploy:check
 pnpm --filter @refquill/docs run deploy
 ```
 
-The root pnpm workspace applies a patch for Waku 1.0.0-rc.2 during installation. It materializes Hono's lazy request before Waku's Node API handler constructs a Request. This preserves Node request handling during local development; the deployed site serves generated assets.
+The root pnpm workspace applies a patch for Waku 1.0.0-rc.3 during installation. It materializes Hono's lazy request before Waku's Node API handler constructs a Request. This preserves Node request handling during local development; the deployed site serves generated assets.
 
 ## Repository checks
 
@@ -98,4 +98,4 @@ source files in `examples/frameworks-fumadocs`.
 
 For analyzer and output ownership details, read the repository's [architecture notes](https://github.com/nickwelsh/refquill/blob/main/docs/architecture.md).
 
-The production build renders all docs pages and Open Graph images ahead of deployment. Implementations and their associated items appear on the owning type page and have searchable anchors. Generated Markdown exports include the complete reference.
+The production build renders all docs pages ahead of deployment. Implementations and their associated items appear on the owning type page and have searchable anchors. Generated Markdown exports include the complete reference.

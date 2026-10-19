@@ -11,9 +11,12 @@ audit:
     # Absent from published runtime dependencies and deployed static assets.
     # Reassess if braces is introduced into a runtime or accepts untrusted globs.
     - GHSA-vfj7-8cjw-p6xm
+minimumReleaseAgeExclude:
+  - '@nickwelsh/docs-base@1.0.1'
 overrides:
   # The upstream linter and math extension still pin vulnerable parser versions.
   markdownlint-cli2>smol-toml: ^1.9.0
   micromark-extension-math>katex: 0.18.2
 patchedDependencies:
-  waku@1.0.0-rc.2: patches/waku@1.0.0-rc.2.patch
+  '@nickwelsh/docs-base@1.0.1': patches/@nickwelsh__docs-base@1.0.1.patch
+  waku@1.0.0-rc.3: patches/waku@1.0.0-rc.3.patch

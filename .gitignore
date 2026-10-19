@@ -12,3 +12,5 @@ dist/
 /apps/docs/.source/
 /apps/docs/src/pages.gen.ts
 .wrangler/
+/apps/docs/.docs-base/
+/apps/docs/generated/*.reference.json

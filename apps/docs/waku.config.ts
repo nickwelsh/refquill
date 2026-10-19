@@ -1,18 +1,28 @@
-import { defineConfig } from 'waku/config';
-import { fumadocsMdx } from 'fumadocs-mdx/vite';
-import tailwindcss from '@tailwindcss/vite';
-import icons from 'unplugin-icons/vite';
-import { carbonIcons } from './tooling/carbon-icons';
+import { defineConfig } from '@nickwelsh/docs-base';
 
 export default defineConfig({
-    basePath: '/refquill/',
-    unstable_adapter: 'waku/adapters/cloudflare',
-    vite: {
-        resolve: {
-            tsconfigPaths: true,
-            dedupe: ['waku'],
+    name: 'Refquill',
+    origin: 'https://docs.nickwelsh.me',
+    githubUrl: 'https://github.com/nickwelsh/refquill',
+    githubBranch: process.env.VITE_DOCS_REF || 'main',
+    basePath: '/refquill',
+    content: './content/docs',
+    githubContentPath: 'apps/docs/content/docs',
+    refquill: [
+        {
+            input: './generated/api.json',
+            baseUrl: '/docs/0.x/api',
+            title: 'API reference',
         },
-
-        plugins: [carbonIcons(), icons({ compiler: 'jsx', jsx: 'react' }), tailwindcss(), fumadocsMdx()],
-    },
+        ...['config', 'document', 'resolved', 'reference'].map((name) => ({
+            input: `./generated/${name}.reference.json`,
+            baseUrl: `/docs/0.x/schemas/${name}`,
+            format: 'reference' as const,
+        })),
+        {
+            input: './generated/manpage.reference.json',
+            baseUrl: '/docs/0.x/manpage',
+            format: 'reference',
+        },
+    ],
 });

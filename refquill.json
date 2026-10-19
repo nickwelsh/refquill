@@ -1,7 +1,7 @@
 {
   "$schema": "./packages/schema/config.schema.json",
   "title": "Refquill API reference",
-  "output": "apps/docs/src/generated/api.json",
+  "output": "apps/docs/generated/api.json",
   "inputs": [
     {
       "language": "rust",
