@@ -10,10 +10,10 @@
   },
   "dependencies": {
     "@nickwelsh/refquill-fumadocs": "workspace:*",
-    "fumadocs-core": "16.17.2",
-    "fumadocs-ui": "16.17.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "fumadocs-core": "16.17.7",
+    "fumadocs-ui": "16.17.7",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
