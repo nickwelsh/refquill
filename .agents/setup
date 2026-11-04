@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+repo_root="$PWD"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export DEBIAN_FRONTEND=noninteractive
+
+step() {
+  local label="$1"
+  shift
+  printf '\n==> %s\n' "$label"
+  local started=$SECONDS
+  "$@"
+  printf '==> %s completed in %ss\n' "$label" "$((SECONDS - started))"
+}
+
+packages=()
+for package in build-essential ca-certificates curl xz-utils; do
+  if [[ "$(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true)" != 'install ok installed' ]]; then
+    packages+=("$package")
+  fi
+done
+if ((${#packages[@]})); then
+  step 'Refresh system package index' sudo apt-get update
+  step 'Install build prerequisites' sudo apt-get install -y "${packages[@]}"
+fi
+
+# Keep a supported orb runtime; use CI's Node major if it is missing or too old.
+if ! command -v node >/dev/null || ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 18) ? 0 : 1)'; then
+  case "$(uname -m)" in
+    x86_64) arch=x64 ;;
+    aarch64) arch=arm64 ;;
+    *) echo 'Unsupported Node architecture' >&2; exit 1 ;;
+  esac
+  download_dir="$(mktemp -d)"
+  trap 'rm -rf "$download_dir"' EXIT
+  curl --fail --silent --show-error --location https://nodejs.org/dist/latest-v24.x/SHASUMS256.txt -o "$download_dir/SHASUMS256.txt"
+  archive="$(awk -v suffix="-linux-$arch.tar.xz" '$2 ~ (suffix "$") {print $2}' "$download_dir/SHASUMS256.txt")"
+  curl --fail --silent --show-error --location "https://nodejs.org/dist/latest-v24.x/$archive" -o "$download_dir/$archive"
+  (cd "$download_dir" && grep "  $archive$" SHASUMS256.txt | sha256sum --check)
+  mkdir -p "$HOME/.local"
+  step 'Install Node 24' tar -xJf "$download_dir/$archive" -C "$HOME/.local" --strip-components=1
+  hash -r
+fi
+
+if ! command -v rustup >/dev/null; then
+  step 'Install rustup' bash -o pipefail -c 'curl --proto "=https" --tlsv1.2 --fail --silent --show-error https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none --no-modify-path'
+fi
+# Match CI and the format-61 rustdoc fixtures; do not follow rolling stable.
+step 'Install Rust 1.99.0 with lint tools' rustup toolchain install 1.99.0 --profile minimal --component clippy,rustfmt --no-self-update
+rustup override set 1.99.0
+
+# Amp and supervised services start in separate login shells.
+profile_marker="# Refquill orb toolchain: $repo_root"
+if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile" 2>/dev/null; then
+  cat >> "$HOME/.bash_profile" <<EOF
+
+$profile_marker
+case "\$PWD" in
+  "$repo_root"|"$repo_root"/*) export PATH="\$HOME/.local/bin:\$HOME/.cargo/bin:\$PATH" ;;
+esac
+EOF
+fi
+
+pnpm_spec="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).packageManager')"
+if ! command -v pnpm >/dev/null || [[ "$(pnpm --version)" != "${pnpm_spec#pnpm@}" ]]; then
+  step "Install $pnpm_spec" npm install --global --prefix "$HOME/.local" "$pnpm_spec"
+  hash -r
+fi
+
+step 'Install locked workspace dependencies' pnpm install --frozen-lockfile
+step 'Fetch locked Rust dependencies' cargo fetch --locked
+# Small orbs can expose more host CPUs than their memory can build in parallel.
+step 'Build and stage workspace packages' env CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}" pnpm build

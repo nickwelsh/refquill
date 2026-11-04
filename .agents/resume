@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Toolchains, dependencies, and build caches survive in the orb snapshot.
+# This workspace has no authentication or backing services to reconnect.

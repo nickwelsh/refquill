@@ -41,6 +41,10 @@ pnpm check
 pnpm schema:check
 ```
 
+Amp orbs run `.agents/setup` to install the toolchains and locked dependencies,
+build the workspace, and cache the result in a project snapshot. Warm setup reuses
+the package and Cargo caches; `.agents/resume` does not reinstall dependencies.
+
 Run `pnpm schema` after changing the Rust document model to regenerate schemas and types.
 
 Start the [documentation site](apps/docs/README.md) with `pnpm docs:dev`. The [Rust example](examples/rust-fumadocs/README.md) and [framework example](examples/frameworks-fumadocs/README.md) show Fumadocs integration.
