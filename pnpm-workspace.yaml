@@ -17,6 +17,12 @@ overrides:
   # The upstream linter and math extension still pin vulnerable parser versions.
   markdownlint-cli2>smol-toml: ^1.9.0
   micromark-extension-math>katex: 0.18.2
+  # TypeDoc still requires minimatch 10 (GHSA-g3hv-75wg-m249).
+  # Pair this override with the TypeDoc patch for minimatch 11's partial-match API.
+  typedoc>minimatch: ^11.0.1
+  # markdownlint still pins re2js 2.8.6 (GHSA-gg6h-894w-4m9c).
+  markdownlint>re2js: ^2.8.7
 patchedDependencies:
   '@nickwelsh/docs-base@1.0.1': patches/@nickwelsh__docs-base@1.0.1.patch
+  typedoc@0.28.20: patches/typedoc@0.28.20.patch
   waku@1.0.0-rc.3: patches/waku@1.0.0-rc.3.patch
