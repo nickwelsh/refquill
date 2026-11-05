@@ -1,6 +1,6 @@
 {
   "name": "@nickwelsh/refquill-fumadocs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fumadocs sources and React reference pages for Refquill JSON, JSON Schema, and manpages",
   "license": "MIT",
   "type": "module",
@@ -45,8 +45,8 @@
     "@types/node": "^26.6.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "fumadocs-core": "16.17.8",
-    "fumadocs-ui": "16.17.8",
+    "fumadocs-core": "16.17.9",
+    "fumadocs-ui": "16.17.9",
     "parse5": "^8.0.1",
     "react-dom": "^19.3.1"
   },
