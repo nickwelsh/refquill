@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -19,7 +19,7 @@ test('compiler paths preserve POSIX filenames including literal backslashes', ()
 });
 
 test('directory entry points retain nested TypeScript exports and respect exclusions', async t => {
-  const root = await mkdtemp(path.join(tmpdir(), 'refquill-typescript-paths-'));
+  const root = await realpath(await mkdtemp(path.join(tmpdir(), 'refquill-typescript-paths-')));
   t.after(() => rm(root, { recursive: true, force: true }));
   for (const file of ['src/index.ts', 'src/nested/child.ts', 'src/nested/deep/leaf.ts', 'src/nested/excluded.ts', 'other/outside.ts']) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true });
