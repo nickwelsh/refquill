@@ -464,9 +464,9 @@ checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "globset"
-version = "0.4.20"
+version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+checksum = "f98b0d85522dc0a824cfebbc9594ff4a9b289c568bea0370319dfbdf20ccdd2d"
 dependencies = [
  "aho-corasick",
  "bstr",
@@ -571,9 +571,9 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.59.0"
+version = "0.60.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b320ad34c177093d21622edc9215bb608294c2333ff296672c0c8265a5ee60c"
+checksum = "a42a11b47492e6a2cc76e9c7bcc8077776cb31dac444e0795d7f61bcc6441c08"
 dependencies = [
  "ahash",
  "bytecount",
@@ -599,23 +599,24 @@ dependencies = [
 
 [[package]]
 name = "jsonschema-regex"
-version = "0.59.0"
+version = "0.60.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1472f7be79026f79e01a9b172263311e829d7c210d57b39cb57037abc0ce0500"
+checksum = "107aeb6ff14b8deb5610096a8ce5c554ec89806b521147eaeb3cae05b07edb7a"
 dependencies = [
  "regex-syntax",
 ]
 
 [[package]]
 name = "jsonschema-value"
-version = "0.59.0"
+version = "0.60.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5a7550a7a84787e715ead0b47e01fa8c6bb7c3413630f91a8f2094c06c2078a"
+checksum = "e281d6b177bb4834f2ffd6f92aa0443cffe29c996b251c8d94eb6f456186feba"
 dependencies = [
  "ahash",
  "bytecount",
  "fraction",
  "getrandom 0.3.4",
+ "memchr",
  "num-cmp",
  "num-traits",
  "serde_json",
@@ -671,9 +672,9 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "mago-allocator"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48579c950d7ed4285ab6b8a061b9fe75c596ed520742ebf464d93ae693ee9d06"
+checksum = "0a68d99dbebab52ff1f6df63666d4d64600bfdc4ab3743f083f43917f4d00daf"
 dependencies = [
  "allocator-api2",
  "blink-alloc",
@@ -682,15 +683,15 @@ dependencies = [
 
 [[package]]
 name = "mago-bytes"
-version = "1.56.3"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1c562016fe55c7b7f2e4a12d78557535955dcbf8332870efdbb2d8e88e30586"
+checksum = "88eda2d37aaa68e3ce822d94e0790e1d10d8a1ff352e0d75c9a5069047f30205"
 
 [[package]]
 name = "mago-database"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "503dc2251eb18f31d1f70f98d83f2a1f55ad699c1a8b9da953a30161afbc3be8"
+checksum = "5576f01d2abe1623c7c8fd24e5012cae052d0ea3a841a43d820e72cf9f2cf620"
 dependencies = [
  "foldhash",
  "glob",
@@ -705,9 +706,9 @@ dependencies = [
 
 [[package]]
 name = "mago-names"
-version = "1.56.3"
+version = "1.58.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10a4b14498a9c804073aae8f63936bcac1f84c010c071d0572cec8a655a5909a"
+checksum = "77b351d2eefb3868c14fd1bca4521d550a1c0f3ad89368a087755d1bf326d2cd"
 dependencies = [
  "foldhash",
  "mago-allocator",
@@ -720,18 +721,18 @@ dependencies = [
 
 [[package]]
 name = "mago-php-version"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86d12deb473b9bac75cedac52be19df9529e4f8b1724f4b8aaa4261980150b0e"
+checksum = "b82f8cf669ccc306f14827c0166a2bcccfb6180cb56c1c1458ef54e522d3e901"
 dependencies = [
  "schemars",
 ]
 
 [[package]]
 name = "mago-phpdoc-syntax"
-version = "1.56.3"
+version = "1.58.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed55904c5039f04558a32d1a9f24c517726184eb0dc919d065c69ae619c98f7d"
+checksum = "674513b1ebb52be1568ea409e54dbef1104b24da4b5446a012b6f450e86f4eba"
 dependencies = [
  "mago-allocator",
  "mago-database",
@@ -744,9 +745,9 @@ dependencies = [
 
 [[package]]
 name = "mago-reporting"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5639aaee2b2467c43f608d14e3528fedfd3426af8f9eecec064a1b5b5686b594"
+checksum = "5b6fbaf03ed20c15962aab920b4bbcaf6ec4f1d9813d72bb5e12aafdd7d2eaaa"
 dependencies = [
  "ariadne",
  "blake3",
@@ -767,18 +768,18 @@ dependencies = [
 
 [[package]]
 name = "mago-span"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe6a32c7fa425a2d606b2872c0e2b2464bd84e79fd404e2ad63bfd0e7c186b2b"
+checksum = "9489a42d32ccbc30fd1105c5f13aeded4170b2cdfc2008182bdd0bb854766fb1"
 dependencies = [
  "mago-database",
 ]
 
 [[package]]
 name = "mago-syntax"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d36dc15d1cec650a36f6099ab4f7ec18fa8266f6f0677eed7831a55dfe95adc8"
+checksum = "4fbf1daffec31461650d52f48434a551d357f384e514130269f403aa232660e4"
 dependencies = [
  "mago-allocator",
  "mago-database",
@@ -794,9 +795,9 @@ dependencies = [
 
 [[package]]
 name = "mago-syntax-core"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8dd87b0113664d4b1cb9fa13e7736df2326253aa3971a210fecbeac2cb1e641"
+checksum = "c83f62fa75d507e71a1a83acad3d3cc0b93ec665208e555c35e0584ebc5831f1"
 dependencies = [
  "mago-allocator",
  "mago-database",
@@ -806,19 +807,20 @@ dependencies = [
 
 [[package]]
 name = "mago-text-edit"
-version = "1.58.2"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "accdf3a98721154f135cf90f27815d8db5c7b0c898d79550b0f80775447847c3"
+checksum = "f509454dea3ad8771504356ab320910966f2283664331efe0e26618bde3c708d"
 
 [[package]]
 name = "mago-word"
-version = "1.56.3"
+version = "1.59.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95837994ca01983a6df6b6d2b24e199783fe0f37783e4333de84f9ea503998a9"
+checksum = "7998776911d6dfd929d326672f58e9f49e69a36b0a5d15d6ac94fbc98cd0628d"
 dependencies = [
  "foldhash",
  "itoa",
  "mago-bytes",
+ "parking_lot",
  "ryu",
 ]
 
@@ -1116,9 +1118,9 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.59.0"
+version = "0.60.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "473f4dcca28ead7ee0f8e5b5d0bbae2549f4fc4c958fb20af328961b6c174be3"
+checksum = "f42818036d3b37cda6bd4c494543158a36e431cb717015ef7c93acc6ba214d3b"
 dependencies = [
  "ahash",
  "fluent-uri",
