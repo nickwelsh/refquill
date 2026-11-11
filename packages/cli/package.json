@@ -22,10 +22,10 @@
   "dependencies": {
     "@nickwelsh/refquill-schema": "workspace:*",
     "svelte": "5.57.3",
-    "svelte2tsx": "0.7.62",
+    "svelte2tsx": "0.7.63",
     "typedoc": "0.28.20",
     "typescript": "6.0.3",
-    "vue-component-meta": "3.3.13"
+    "vue-component-meta": "3.3.14"
   },
   "repository": {
     "type": "git",

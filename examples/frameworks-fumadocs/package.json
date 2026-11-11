@@ -10,13 +10,13 @@
   },
   "dependencies": {
     "@nickwelsh/refquill-fumadocs": "workspace:*",
-    "fumadocs-core": "16.17.9",
-    "fumadocs-ui": "16.17.9",
+    "fumadocs-core": "16.17.10",
+    "fumadocs-ui": "16.17.10",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "esbuild": "0.28.2",
@@ -24,6 +24,6 @@
     "typescript": "~6.0.3",
     "vue": "^3.5.0",
     "svelte": "^5.57.3",
-    "solid-js": "^1.9.0"
+    "solid-js": "^1.9.18"
   }
 }
