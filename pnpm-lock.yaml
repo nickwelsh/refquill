@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  waku>@hono/node-server: 2.1.8
   markdownlint-cli2>smol-toml: ^1.9.0
   micromark-extension-math>katex: 0.18.2
   typedoc>minimatch: ^11.0.1
