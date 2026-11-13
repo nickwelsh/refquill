@@ -11,10 +11,10 @@ anyhow = "1"
 mago-allocator = "=1.59.0"
 clap = { version = "4", features = ["derive"] }
 globset = "0.4"
-jsonschema = { version = "0.60", default-features = false }
+jsonschema = { version = "0.61", default-features = false }
 mago-database = "=1.59.0"
-mago-phpdoc-syntax = "=1.58.2"
-mago-names = "=1.58.2"
+mago-phpdoc-syntax = "=1.59.0"
+mago-names = "=1.59.0"
 mago-span = "=1.59.0"
 mago-syntax = "=1.59.0"
 schemars = "1"
