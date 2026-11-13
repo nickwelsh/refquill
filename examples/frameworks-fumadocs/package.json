@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@nickwelsh/refquill-fumadocs": "workspace:*",
-    "fumadocs-core": "16.17.10",
-    "fumadocs-ui": "16.17.10",
+    "fumadocs-core": "16.18.4",
+    "fumadocs-ui": "16.18.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
@@ -22,7 +22,7 @@
     "esbuild": "0.28.2",
     "tsx": "^4.20.6",
     "typescript": "~6.0.3",
-    "vue": "^3.5.0",
+    "vue": "^3.5.45",
     "svelte": "^5.57.3",
     "solid-js": "^1.9.18"
   }
