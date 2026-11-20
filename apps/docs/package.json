@@ -25,8 +25,8 @@
     },
     "dependencies": {
         "@nickwelsh/docs-base": "1.1.0",
-        "fumadocs-core": "16.18.4",
-        "fumadocs-mdx": "15.5.3",
+        "fumadocs-core": "16.19.4",
+        "fumadocs-mdx": "15.6.3",
         "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.5",
         "react": "19.3.1",
         "react-dom": "19.3.1",
@@ -37,11 +37,11 @@
         "@nickwelsh/refquill": "workspace:*",
         "@nickwelsh/refquill-fumadocs": "workspace:*",
         "@types/node": "^26.6.6",
-        "markdownlint-cli2": "^0.24.0",
-        "oxfmt": "^0.78.0",
-        "oxlint": "^1.93.0",
+        "markdownlint-cli2": "^0.24.1",
+        "oxfmt": "^0.79.0",
+        "oxlint": "^1.94.0",
         "typescript": "~6.0.3",
-        "wrangler": "4.159.0",
+        "wrangler": "4.163.0",
         "yaml": "^2.9.1"
     }
 }
